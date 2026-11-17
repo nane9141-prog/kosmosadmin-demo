@@ -109,6 +109,11 @@ form.dirty .btn.primary{box-shadow:0 0 0 3px var(--primary-soft)}
 .tm .opt.sel{background:var(--primary);color:var(--canvas)}
 .tm .opt.sel::after{display:none}
 input.num{font-family:var(--mono);letter-spacing:0;text-align:right}
+/* 단위가 있는 입력칸: 단위를 칸 안 오른쪽 끝에 둔다 */
+.uf,label.f>span.uf{position:relative;display:block;margin:0;font-size:14px;color:inherit}
+.uf input{padding-right:34px}
+.uf i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--ink-mute);pointer-events:none}
+.uf:has(input:disabled) i{color:var(--ink-soft)}
 label.f{display:block}
 label.f>span{display:block;font-size:12px;color:var(--ink-mute);margin-bottom:4px}
 .err{color:var(--critical);font-size:12px;margin-top:8px}
@@ -664,7 +669,7 @@ basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.ed
   <label class="f"><span>상세주소</span><input name="addressDetail" placeholder="건물명, 층, 회의실" value="${esc(m.addressDetail)}"${dis(e)}></label></div>
   <label class="f" style="margin-top:12px"><span>주총소집지 특이사항</span><textarea name="notes" placeholder="반입 동선, 인터넷 회선, 주차 등"${dis(e)}>${esc(m.notes)}</textarea></label></div></div>
   <div class="fs"><div class="fs-h"><h4>예상 주주수</h4><p>주주명부 기준. 현장 참석 예상 인원과 다릅니다.</p></div>
-  <label class="f" style="max-width:240px"><span>주주수 (명)</span><input class="num" name="shareholders" inputmode="numeric" placeholder="미입력" value="${won(m.shareholders)}"${dis(e)}></label></div>
+  <label class="f" style="max-width:240px"><span>주주수</span><span class="uf"><input class="num" name="shareholders" inputmode="numeric" placeholder="미입력" value="${won(m.shareholders)}"${dis(e)}><i>명</i></span></label></div>
   <div class="fs"><div class="fs-h"><h4>서비스 이용 항목</h4><p>이 주총에서 이용하는 항목을 모두 선택합니다.</p></div>
   <div class="opts">
   <label class="optrow"><input type="checkbox" name="svc_evote"${sv.evote?' checked':''}${dis(e)}><span><b>전자투표</b><small>주주가 출석하지 않고 온라인으로 의결권을 행사</small></span></label>
@@ -726,8 +731,8 @@ estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x
   <label class="f fix" style="width:100px"><span>구분 *</span><select name="kind">${opt(['장비','서비스'],ed.kind)}</select></label>
   <label class="f" style="flex:2"><span>장비·서비스명 *</span><input name="name" value="${esc(ed.name)}"></label>
   <label class="f fix" style="width:80px"><span>단위</span><input name="unit" placeholder="대, 명, 식" value="${esc(ed.unit)}"></label>
-  <label class="f fix" style="width:90px"><span>수량 *</span><input class="num" name="qty" inputmode="numeric" value="${esc(ed.qty??1)}"></label>
-  <label class="f"><span>단가 (원) *</span><input class="num" name="price" inputmode="numeric" value="${won(ed.price??'')}"></label>
+  <label class="f fix" style="width:90px"><span>수량 *</span><input class="num" name="qty" inputmode="numeric" value="${won(ed.qty??1)}"></label>
+  <label class="f"><span>단가 *</span><span class="uf"><input class="num" name="price" inputmode="numeric" value="${won(ed.price??'')}"><i>원</i></span></label>
   <span class="fix"><button class="btn primary">${ed.id?'수정 저장':'항목 추가'}</button>${ed.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div><div class="err"></div></form></div>
   <div class="card"><h3>견적 메모 <span class="mute">${m.memos.length}건</span></h3>
   ${m.memos.map(x=>`<div class="note"><span class="badge">요청 ${ORG[x.org]}${x.rname?' · '+esc(x.rname):''}</span><p>${esc(x.body)}</p>
@@ -758,7 +763,7 @@ req(m){const list=m.reqs.filter(can.seeReq),ed=editing('req',m.reqs)||{},irk=use
 contract(m){const c=m.contract,e=can.editContract(),fin=c.versions.find(v=>v.id===c.finalId),last=c.versions[c.versions.length-1];
   return `<form class="card" data-form="contract" novalidate><h3>계약 정보</h3><div class="row">
   <label class="f" style="flex:2"><span>계약명</span><input name="title" value="${esc(c.title)}"${dis(e)}></label>
-  <label class="f"><span>계약금액 (원)</span><input class="num" name="amount" inputmode="numeric" placeholder="미입력" value="${won(c.amount)}"${dis(e)}></label>
+  <label class="f"><span>계약금액</span><span class="uf"><input class="num" name="amount" inputmode="numeric" placeholder="미입력" value="${won(c.amount)}"${dis(e)}><i>원</i></span></label>
   <label class="f fix" style="width:140px"><span>부가세 기준</span><select name="vat"${dis(e)}>${opt(['미정','포함','별도'],c.vat)}</select></label>
   ${e?'<span class="fix"><button class="btn primary">저장</button></span>':''}</div>
   <p class="soft" style="margin:8px 0 0;font-size:12px">계약금액은 스트리밍 견적 합계와 따로 저장되며 서로 덮어쓰지 않습니다.${e?'':' 계약 수정은 계약담당자만 할 수 있습니다.'}</p><div class="err"></div></form>
@@ -1073,6 +1078,10 @@ document.addEventListener('change',e=>{const t=e.target;
   else if(t.name==='type'&&t.form&&t.form.dataset.form==='agenda'){const r=resFor(t.value);if(r){t.form.elements.res.value=r;render()}}
   else if(t.id==='impfile'&&t.files[0]){t.files[0].text().then(x=>{ui.imp={kind:ui.imp.kind,text:x};render()})}});
 document.addEventListener('input',e=>{if(e.target.id==='imptext')ui.imp.text=e.target.value});
+// 숫자 입력칸: 입력하는 동안 천 단위 쉼표를 자동으로 넣는다. 커서는 오른쪽 기준 위치를 유지한다.
+document.addEventListener('input',e=>{const t=e.target;if(!t.classList||!t.classList.contains('num'))return;
+  const fromRight=t.value.length-(t.selectionStart??t.value.length),digits=t.value.replace(/[^\d]/g,'').replace(/^0+(?=\d)/,'');
+  const out=digits.replace(/\B(?=(\d{3})+(?!\d))/g,',');if(out===t.value)return;t.value=out;const pos=Math.max(0,out.length-fromRight);try{t.setSelectionRange(pos,pos)}catch(x){}});
 
 render();
 </script>
