@@ -228,23 +228,38 @@ table.sched .none{display:inline-block;line-height:36px}
 .place-in{flex:1;min-width:260px;display:grid;grid-template-columns:3fr 2fr;gap:8px}
 .edit-link{flex:none;font-size:12px;color:var(--ink-mute);white-space:nowrap}
 .edit-link:hover{color:var(--primary)}
-/* 서비스 이용 항목: 선택 타일 */
-.svc{margin-top:20px;padding-top:20px;border-top:1px solid var(--hairline)}
-.svc-grid{display:grid;grid-template-columns:3fr 1fr;gap:12px}
-.svc-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:22px}
-.svc-h h4{margin:0;font-size:14px;font-weight:500}
-.svc-h .soft{font-size:12px}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tiles.one{grid-template-columns:1fr}
+/* 폼 구역: 왼쪽 제목·설명, 오른쪽 입력 (설정 화면형 2단 레이아웃) */
+.fs{display:grid;grid-template-columns:232px 1fr;gap:24px;padding:20px 0;border-top:1px solid var(--hairline)}
+.card>h3+.fs{border-top:0;padding-top:4px}
+.fs-h h4{margin:0;font-size:14px;font-weight:500}
+.fs-h p{margin:4px 0 0;font-size:12px;color:var(--ink-soft)}
+/* 선택 목록: 한 줄에 한 항목, 체크박스 + 이름 + 설명 */
+.opts{border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);overflow:hidden}
+.fs>.opts,.fs>.f{align-self:start}
+.optrow{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;cursor:pointer;transition:background-color .15s ease-out}
+.opts>.optrow+.optrow,.opts>.optrow+.optgroup,.opts>.optgroup+.optrow{border-top:1px solid var(--hairline)}
+.optrow:hover{background:var(--sunken)}
+.optrow:has(input:disabled){cursor:not-allowed}
+.optrow:has(input:disabled):hover{background:none}
+.optrow input{margin-top:1px}
+.optrow b{display:block;font-weight:500}
+.optrow small{display:block;margin-top:1px;font-size:12px;color:var(--ink-mute)}
+/* 조건부 질문: 체크하면 바로 아래에 왼쪽 선과 함께 펼쳐진다 */
+.reveal{margin:0 14px 16px 22px;padding:4px 0 4px 21px;border-left:2px solid var(--hairline-strong)}
+.reveal .q{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:500}
+.radios{display:flex;gap:24px;margin-top:10px}
+.radio{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+input[type=radio]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;padding:0;border-radius:50%;border:1px solid var(--hairline-strong);background:var(--canvas);display:inline-grid;place-content:center;cursor:pointer}
+input[type=radio]:hover{border-color:var(--ink)}
+input[type=radio]:checked{border-color:var(--primary)}
+input[type=radio]:checked::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--primary)}
+input[type=radio]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* 선택 타일 (일정 탭의 "주주총회와 동일") */
 .tile{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);cursor:pointer;white-space:nowrap;transition:border-color .15s ease-out,background-color .15s ease-out}
 .tile:hover{border-color:var(--hairline-strong)}
 .tile:has(input:checked){border-color:var(--primary);background:var(--primary-soft)}
 .tile:has(input:focus-visible){outline:2px solid var(--ink);outline-offset:2px}
 .tile:has(input:disabled){background:var(--sunken);color:var(--ink-mute);cursor:not-allowed}
-.fight{margin-top:12px;padding:14px 16px 16px;border-radius:10px;background:var(--tray);box-shadow:inset 3px 0 0 var(--primary)}
-.fight-row{display:flex;gap:8px;align-items:center}
-.fight-row .tile{flex:none}
-.fight-row .f{flex:1;min-width:0}
 .dl{display:grid;grid-template-columns:200px 1fr;margin:0}
 .dl dt{color:var(--ink-mute);padding:12px 0;border-bottom:1px solid var(--hairline)}
 .dl dd{margin:0;padding:12px 0;border-bottom:1px solid var(--hairline);min-height:45px}
@@ -326,10 +341,12 @@ table.sched .none{display:inline-block;line-height:36px}
   .syncbar,.stat,.steps,.total{flex-wrap:wrap}
   .stat{gap:16px 24px}
   .steps li+li::before{width:12px}
-  .svc-grid,.tiles{grid-template-columns:1fr}
+  .fs{grid-template-columns:1fr;gap:12px;padding:16px 0}
   .tile{height:44px}
-  .fight-row{flex-direction:column;align-items:stretch}
-  .svc-h{flex-wrap:wrap}
+  .optrow{padding:14px}
+  input[type=radio]{width:22px;height:22px}
+  .radio{min-height:44px}
+  .reveal{margin-left:24px}
   .dl{grid-template-columns:1fr}
   .dl dt{padding:12px 0 0;border-bottom:0;font-size:12px}
   .dl dd{padding:2px 0 12px;min-height:0}
@@ -552,6 +569,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.
 function syncToggle(t){const id=t.dataset.toggle;document.getElementById(id)?.classList.toggle('x-hide',t.checked);document.getElementById(id+'-same')?.classList.toggle('x-hide',!t.checked)}
 
 function syncShow(t){document.getElementById(t.dataset.show)?.classList.toggle('x-hide',!t.checked)}
+function syncRadio(t){if(t.checked)document.getElementById(t.dataset.rshow)?.classList.toggle('x-hide',t.value!=='y')}
+// 체크·라디오 상태에 맞춰 조건부 입력의 표시 여부를 다시 맞춘다
+function syncReveals(){document.querySelectorAll('[data-toggle]').forEach(syncToggle);document.querySelectorAll('[data-show]').forEach(syncShow);document.querySelectorAll('[data-rshow]').forEach(syncRadio)}
 
 /* ---------- 라우팅 ---------- */
 function route(){const h=location.hash.replace(/^#\/?/,'').split('/');return h[0]==='c'?{cid:+h[1],tab:h[2]||'basic'}:h[0]==='import'||h[0]==='accounts'?{page:h[0]}:{}}
@@ -573,14 +593,15 @@ document.addEventListener('change',e=>{const f=e.target.closest&&e.target.closes
 function render(){
   const app=document.getElementById('app');
   closePop();
-  const keep=[...document.querySelectorAll('form.dirty')].map(f=>[f.dataset.form,[...f.elements].filter(x=>x.name&&x.type!=='file').map(x=>[x.name,x.type==='checkbox'?x.checked:x.value])]);
+  const keep=[...document.querySelectorAll('form.dirty')].map(f=>[f.dataset.form,[...f.elements].filter(x=>x.name&&x.type!=='file'&&(x.type!=='radio'||x.checked)).map(x=>[x.name,x.type==='checkbox'?x.checked:x.value])]);
   if(!user){app.innerHTML=viewLogin();return}
   const r=route();
   const body=r.page==='import'&&can.irk()?viewImport():r.page==='accounts'&&can.admin()?viewAccounts():r.cid&&co(r.cid)&&can.seeCompany(r.cid)?viewDetail(r):r.cid?`<div class="page"><div class="card empty">접근 권한이 없거나 없는 기업입니다. <a href="#/">기업 목록으로</a></div></div>`:viewList();
   app.innerHTML=`<div class="top"><a class="brand" href="#/">KOSMOS Admin</a><nav class="nav"><a href="#/" class="${!r.page?'on':''}">기업 목록</a>${can.irk()?`<a href="#/import" class="${r.page==='import'?'on':''}">가져오기</a>`:''}${can.admin()?`<a href="#/accounts" class="${r.page==='accounts'?'on':''}">계정 관리</a>`:''}</nav><span class="grow"></span>
     <div class="user"><span><b>${esc(user.name)}</b><span class="role"> · ${esc(user.label)}</span></span><button class="btn sm" data-act="logout">로그아웃</button></div></div>
     <div class="demo"><span class="badge warn">시연용</span><span class="long">입력한 내용은 이 브라우저에만 저장됩니다. 실제 DB와 연결되어 있지 않습니다.</span><span class="short">이 브라우저에만 저장됩니다</span><span class="grow" style="flex:1"></span><button class="btn sm" data-act="reset">입력 내용 초기화</button></div>${body}`;
-  keep.forEach(([n,vals])=>{const f=document.querySelector(`form[data-form="${n}"]`);if(!f)return;vals.forEach(([k,v])=>{const x=f.elements[k];if(!x||x.disabled)return;if(x.type==='checkbox'){x.checked=v;if(x.dataset.toggle)syncToggle(x);if(x.dataset.show)syncShow(x)}else x.value=v});f.classList.add('dirty')});
+  keep.forEach(([n,vals])=>{const f=document.querySelector(`form[data-form="${n}"]`);if(!f)return;vals.forEach(([k,v])=>{const x=f.elements[k];if(!x||x.disabled)return;if(x.type==='checkbox')x.checked=v;else x.value=v});f.classList.add('dirty')});
+  syncReveals();
   enhance();curHash=location.hash;
 }
 
@@ -635,22 +656,27 @@ function viewDetail(r){
 const PANELS={
 basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.editBasic(),ed=editing('contact',m.contacts)||{},cl=e?m.contacts:m.contacts.filter(x=>x.primary);
   return `<form class="card" data-form="basic" novalidate><h3>주주총회 정보</h3>
-  <div class="grid4"><label class="f"><span>주총일자</span><input type="date" name="date" value="${esc(m.date)}"${dis(e)}></label>
-  <label class="f"><span>주총 시간</span><input type="time" name="time" value="${esc(m.time)}"${dis(e)}></label>
-  <label class="f" style="grid-column:span 2"><span>예상 주주수 (주주명부 기준)</span><input class="num" name="shareholders" inputmode="numeric" placeholder="미입력" value="${won(m.shareholders)}"${dis(e)}></label></div>
-  <div class="grid2" style="margin-top:12px"><label class="f"><span>주소</span><input name="address" value="${esc(m.address)}"${dis(e)}></label>
+  <div class="fs"><div class="fs-h"><h4>일시</h4><p>정해지지 않았으면 비워 둡니다.</p></div>
+  <div class="grid2"><label class="f"><span>주총일자</span><input type="date" name="date" value="${esc(m.date)}"${dis(e)}></label>
+  <label class="f"><span>주총 시간</span><input type="time" name="time" value="${esc(m.time)}"${dis(e)}></label></div></div>
+  <div class="fs"><div class="fs-h"><h4>장소</h4><p>주총 개최 장소와 운영상 특이사항.</p></div>
+  <div><div class="grid2"><label class="f"><span>주소</span><input name="address" value="${esc(m.address)}"${dis(e)}></label>
   <label class="f"><span>상세주소</span><input name="addressDetail" placeholder="건물명, 층, 회의실" value="${esc(m.addressDetail)}"${dis(e)}></label></div>
-  <label class="f" style="margin-top:12px"><span>주총소집지 특이사항</span><textarea name="notes"${dis(e)}>${esc(m.notes)}</textarea></label>
-  <div class="svc">
-  <div class="svc-grid"><div><div class="svc-h"><h4>서비스 이용 항목</h4><span class="soft">이용하는 항목을 모두 선택</span></div>
-  <div class="tiles"><label class="tile"><input type="checkbox" name="svc_evote"${sv.evote?' checked':''}${dis(e)}>전자투표</label>
-  <label class="tile"><input type="checkbox" name="svc_eproxy"${sv.eproxy?' checked':''}${dis(e)}>전자위임장</label>
-  <label class="tile"><input type="checkbox" name="svc_solicit" data-show="solicit-box"${sv.solicit?' checked':''}${dis(e)}>의결권 대리행사 권유</label></div></div>
-  <div><div class="svc-h"><h4>집중투표</h4></div>
-  <div class="tiles one"><label class="tile"><input type="checkbox" name="cumulative"${sv.cumulative?' checked':''}${dis(e)}>집중투표 실시</label></div></div></div>
-  <div id="solicit-box" class="fight${sv.solicit?'':' x-hide'}"><div class="svc-h"><h4>의결권 공방</h4><span class="badge">IR큐더스 전용</span><span class="soft">의결권 대리행사 권유를 이용할 때만 적습니다</span></div>
-  <div class="fight-row"><label class="tile"><input type="checkbox" name="opp_exists" data-show="opp-name"${sv.oppExists?' checked':''}>상대측 있음</label>
-  <label class="f${sv.oppExists?'':' x-hide'}" id="opp-name"><input name="opp_name" aria-label="의결권 공방 상대측" placeholder="상대측이 누구인지 (예: 2대 주주, 행동주의 펀드, 소액주주연대)" value="${esc(sv.oppName)}"></label></div></div></div>
+  <label class="f" style="margin-top:12px"><span>주총소집지 특이사항</span><textarea name="notes" placeholder="반입 동선, 인터넷 회선, 주차 등"${dis(e)}>${esc(m.notes)}</textarea></label></div></div>
+  <div class="fs"><div class="fs-h"><h4>예상 주주수</h4><p>주주명부 기준. 현장 참석 예상 인원과 다릅니다.</p></div>
+  <label class="f" style="max-width:240px"><span>주주수 (명)</span><input class="num" name="shareholders" inputmode="numeric" placeholder="미입력" value="${won(m.shareholders)}"${dis(e)}></label></div>
+  <div class="fs"><div class="fs-h"><h4>서비스 이용 항목</h4><p>이 주총에서 이용하는 항목을 모두 선택합니다.</p></div>
+  <div class="opts">
+  <label class="optrow"><input type="checkbox" name="svc_evote"${sv.evote?' checked':''}${dis(e)}><span><b>전자투표</b><small>주주가 출석하지 않고 온라인으로 의결권을 행사</small></span></label>
+  <label class="optrow"><input type="checkbox" name="svc_eproxy"${sv.eproxy?' checked':''}${dis(e)}><span><b>전자위임장</b><small>주주가 온라인으로 의결권 위임장을 수여</small></span></label>
+  <div class="optgroup"><label class="optrow"><input type="checkbox" name="svc_solicit" data-show="solicit-box"${sv.solicit?' checked':''}${dis(e)}><span><b>의결권 대리행사 권유</b><small>주주에게 의결권 위임을 권유</small></span></label>
+  <div id="solicit-box" class="reveal${sv.solicit?'':' x-hide'}"><div class="q">의결권 공방 상대측이 있습니까? <span class="badge">IR큐더스 전용</span></div>
+  <div class="radios"><label class="radio"><input type="radio" name="opp_exists" value="n" data-rshow="opp-name"${sv.oppExists?'':' checked'}>없음</label>
+  <label class="radio"><input type="radio" name="opp_exists" value="y" data-rshow="opp-name"${sv.oppExists?' checked':''}>있음</label></div>
+  <label class="f${sv.oppExists?'':' x-hide'}" id="opp-name" style="margin-top:12px;max-width:440px"><span>상대측</span><input name="opp_name" placeholder="예: 2대 주주, 행동주의 펀드, 소액주주연대" value="${esc(sv.oppName)}"></label></div></div>
+  </div></div>
+  <div class="fs"><div class="fs-h"><h4>집중투표</h4><p>이사 선임에 집중투표를 적용하는 주총인지 표시합니다.</p></div>
+  <div class="opts"><label class="optrow"><input type="checkbox" name="cumulative"${sv.cumulative?' checked':''}${dis(e)}><span><b>집중투표 실시</b></span></label></div></div>
   <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>
   <div class="card"><h3>고객사 담당자 <span class="mute">${cl.length}명</span></h3>
   ${cl.length?`<table><thead><tr><th>담당자명</th><th>부서·직급</th><th>연락처</th><th>이메일</th><th>역할</th>${e?'<th></th>':''}</tr></thead><tbody>
@@ -758,7 +784,7 @@ const intOr=(v,min)=>{v=String(v).replace(/[,\s]/g,'');if(v==='')return '';retur
 const SUBMIT={
   basic(f,m){const n=intOr(f.shareholders,0);if(n===null)return '예상 주주수는 0 이상의 정수로 입력해 주세요.';
     Object.assign(m,{date:f.date,time:f.time,address:f.address.trim(),addressDetail:f.addressDetail.trim(),notes:f.notes,shareholders:n});
-    const sol=!!f.svc_solicit,opp=sol&&!!f.opp_exists;m.svc={evote:!!f.svc_evote,eproxy:!!f.svc_eproxy,solicit:sol,cumulative:!!f.cumulative,oppExists:opp,oppName:opp?(f.opp_name||'').trim():''}},
+    const sol=!!f.svc_solicit,opp=sol&&f.opp_exists==='y';m.svc={evote:!!f.svc_evote,eproxy:!!f.svc_eproxy,solicit:sol,cumulative:!!f.cumulative,oppExists:opp,oppName:opp?(f.opp_name||'').trim():''}},
   schedule(f,m){m.date=f.date;m.time=f.time;Object.assign(m.sched,{pre_d:f.pre_d,mock_d:f.mock_d,mock_t:f.mock_t,reh_d:f.reh_d,reh_t:f.reh_t,mock_same:!!f.mock_same,mock_addr:(f.mock_addr||'').trim(),mock_addr_detail:(f.mock_addr_detail||'').trim()})},
   contact(f,m){if(!f.name.trim())return '담당자명을 입력해 주세요.';if(!f.phone.trim()&&!f.email.trim())return '연락처와 이메일 중 하나는 입력해 주세요.';
     if(f.email.trim()&&!/^\S+@\S+\.\S+$/.test(f.email.trim()))return '이메일 형식을 확인해 주세요.';
@@ -1038,6 +1064,7 @@ const GLOBAL_FORMS={
 };
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.map!==undefined){const imp=ui.imp,i=+t.dataset.map;if(t.value)imp.map=imp.map.map((v,j)=>j!==i&&v===t.value?'':v);imp.map[i]=t.value;imp.pick={};analyze();render()}
+  else if(t.dataset.rshow){syncRadio(t);if(t.value==='y')document.querySelector('[name=opp_name]')?.focus()}
   else if(t.dataset.show){syncShow(t);if(t.checked)document.getElementById(t.dataset.show)?.querySelector('input:not([type=checkbox])')?.focus()}
   else if(t.dataset.toggle){syncToggle(t);if(!t.checked)document.querySelector('[name=mock_addr]')?.focus()}
   else if(t.dataset.pick){ui.imp.pick[t.dataset.pick]=t.checked}
