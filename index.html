@@ -30,7 +30,7 @@ a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
 
 /* 상단바 */
 .top{position:sticky;top:0;z-index:10;height:60px;background:var(--canvas);border-bottom:1px solid var(--hairline);display:flex;align-items:center;gap:24px;padding:0 24px}
-.brand{font-weight:500;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.brand{font-weight:500;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
 a.brand:hover{text-decoration:none}
 .brand i{width:8px;height:8px;border-radius:50%;background:var(--primary)}
 .top .grow{flex:1}
@@ -172,7 +172,7 @@ td .btn+.btn{margin-left:4px}
 .entry button.btn:not([type=button]):not(.primary):not(.sub){background:var(--primary);border-color:var(--primary);color:var(--canvas)}
 .entry button.btn:not([type=button]):not(.primary):not(.sub):hover{background:var(--primary-hover);border-color:var(--primary-hover)}
 .entry.editing h3::before{content:"✎";font-size:11px}
-.entry td.wrap{padding-top:8px;padding-bottom:8px;vertical-align:top}
+.entry td.wrap{padding-top:8px;padding-bottom:8px;vertical-align:top;white-space:normal}
 .entry th{background:var(--canvas)}
 /* 카드 제목 */
 .card>h3,.card>.head h3{font-size:16px}
@@ -210,6 +210,10 @@ tr.off td .badge{color:var(--ink-soft)}
 .btn,input,select,textarea,.ctl,td,.tabs a,.nav a{transition:border-color .15s ease-out,background-color .15s ease-out,color .15s ease-out}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 .syncbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px 8px 16px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);font-size:12px}
+.wd{flex:none;margin-right:2px;font-size:12px;color:var(--ink-mute)}
+.ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+table.sched td.wrap{vertical-align:top;padding-top:10px;padding-bottom:10px;white-space:normal}
+table.sched td:first-child{padding-top:18px}
 /* 기타 */
 .demo{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:6px 24px;font-size:12px;color:var(--ink-mute);display:flex;gap:8px;align-items:center}
 .login{min-height:100vh;display:grid;place-items:center;padding:48px 24px}
@@ -293,8 +297,11 @@ const can={
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const won=n=>n===''||n==null?'':Number(n).toLocaleString('ko-KR');
 const tbd='<span class="soft">미정</span>';
-const dt=(d,t)=>d?esc(d.replaceAll('-','.'))+(t?' '+esc(t):' <span class="soft">시간 미정</span>'):tbd;
-const stampStr=iso=>{const d=new Date(iso),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`};
+const WD='일월화수목금토';
+const wd=d=>{const [y,mo,dd]=String(d).split('-').map(Number);return WD[new Date(y,mo-1,dd).getDay()]};
+const fmtD=d=>d?`${d.replaceAll('-','.')} (${wd(d)})`:'';   // 모든 날짜는 요일을 함께 적는다
+const dt=(d,t)=>d?esc(fmtD(d))+(t?' '+esc(t):' <span class="soft">시간 미정</span>'):tbd;
+const stampStr=iso=>{const d=new Date(iso),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} (${WD[d.getDay()]}) ${p(d.getHours())}:${p(d.getMinutes())}`};
 const stamp=(o,isNew)=>{const n=new Date().toISOString();if(isNew){o.createdBy=user.name;o.createdById=user.id;o.createdOrg=user.org;o.createdAt=n}else{o.updatedBy=user.name;o.updatedAt=n}return o};
 const meta=o=>`작성 ${esc(o.createdBy)} (${ORG[o.createdOrg]}) · ${stampStr(o.createdAt)}`+(o.updatedAt?` · 수정 ${esc(o.updatedBy)} · ${stampStr(o.updatedAt)}`:'');
 const opt=(list,sel)=>list.map(v=>{const[a,b]=Array.isArray(v)?v:[v,v];return `<option value="${esc(a)}"${a===sel?' selected':''}>${esc(b)}</option>`}).join('');
@@ -342,7 +349,9 @@ function enhance(){
   });
   document.querySelectorAll('input[type=date]:not(.x-hide)').forEach(inp=>{
     const b=mkPick(inp,ICON.cal,'직접 입력: 2027.03.19 또는 20270319'),txt=b.txt;
-    const sync=()=>{txt.value=inp.value?inp.value.replaceAll('-','.'):'';b.classList.remove('bad')};sync();
+    const wdEl=document.createElement('span');wdEl.className='wd';b.insertBefore(wdEl,b.btn);
+    const sync=()=>{txt.value=inp.value?inp.value.replaceAll('-','.'):'';wdEl.textContent=inp.value?`(${wd(inp.value)})`:'';b.classList.remove('bad')};sync();
+    txt.addEventListener('input',()=>{const d=normDate(txt.value.trim());wdEl.textContent=d?`(${wd(d)})`:''});
     txt.addEventListener('change',()=>{const v=txt.value.trim();if(!v){setVal(inp,'');sync();return}const d=normDate(v);if(d){setVal(inp,d);sync()}else b.classList.add('bad')});
     b.btn.onclick=()=>openPop(b,false,el=>{
       const now=new Date(),today=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}`;
@@ -392,6 +401,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();opts[i]?.classList.remove('act');i=e.key==='ArrowDown'?Math.min(opts.length-1,i+1):Math.max(0,i-1);opts[i].classList.add('act');opts[i].scrollIntoView({block:'nearest'})}
   else if(e.key==='Enter'&&i>=0){e.preventDefault();opts[i].click()}});
 
+// '주주총회와 동일' 체크에 따라 직접 입력칸을 보이거나 숨긴다
+function syncToggle(t){const id=t.dataset.toggle;document.getElementById(id)?.classList.toggle('x-hide',t.checked);document.getElementById(id+'-same')?.classList.toggle('x-hide',!t.checked)}
+
 /* ---------- 라우팅 ---------- */
 function route(){const h=location.hash.replace(/^#\/?/,'').split('/');return h[0]==='c'?{cid:+h[1],tab:h[2]||'basic'}:h[0]==='import'||h[0]==='accounts'?{page:h[0]}:{}}
 let curHash=location.hash;
@@ -412,19 +424,19 @@ document.addEventListener('change',e=>{const f=e.target.closest&&e.target.closes
 function render(){
   const app=document.getElementById('app');
   closePop();
-  const keep=[...document.querySelectorAll('form.dirty')].map(f=>[f.dataset.form,[...f.elements].filter(x=>x.name&&x.type!=='file').map(x=>[x.name,x.value])]);
+  const keep=[...document.querySelectorAll('form.dirty')].map(f=>[f.dataset.form,[...f.elements].filter(x=>x.name&&x.type!=='file').map(x=>[x.name,x.type==='checkbox'?x.checked:x.value])]);
   if(!user){app.innerHTML=viewLogin();return}
   const r=route();
   const body=r.page==='import'&&can.irk()?viewImport():r.page==='accounts'&&can.admin()?viewAccounts():r.cid&&co(r.cid)&&can.seeCompany(r.cid)?viewDetail(r):r.cid?`<div class="page"><div class="card empty">접근 권한이 없거나 없는 기업입니다. <a href="#/">기업 목록으로</a></div></div>`:viewList();
-  app.innerHTML=`<div class="top"><a class="brand" href="#/"><i></i>KOSMOS Admin</a><nav class="nav"><a href="#/" class="${!r.page?'on':''}">기업 목록</a>${can.irk()?`<a href="#/import" class="${r.page==='import'?'on':''}">가져오기</a>`:''}${can.admin()?`<a href="#/accounts" class="${r.page==='accounts'?'on':''}">계정 관리</a>`:''}</nav><span class="grow"></span>
+  app.innerHTML=`<div class="top"><a class="brand" href="#/">KOSMOS Admin</a><nav class="nav"><a href="#/" class="${!r.page?'on':''}">기업 목록</a>${can.irk()?`<a href="#/import" class="${r.page==='import'?'on':''}">가져오기</a>`:''}${can.admin()?`<a href="#/accounts" class="${r.page==='accounts'?'on':''}">계정 관리</a>`:''}</nav><span class="grow"></span>
     <div class="user"><span><b>${esc(user.name)}</b> · ${esc(user.label)}</span><button class="btn sm" data-act="logout">로그아웃</button></div></div>
     <div class="demo"><span class="badge warn">시연용</span>입력한 내용은 이 브라우저에만 저장됩니다. 실제 DB와 연결되어 있지 않습니다.<span class="grow" style="flex:1"></span><button class="btn sm" data-act="reset">입력 내용 초기화</button></div>${body}`;
-  keep.forEach(([n,vals])=>{const f=document.querySelector(`form[data-form="${n}"]`);if(!f)return;vals.forEach(([k,v])=>{const x=f.elements[k];if(x&&!x.disabled)x.value=v});f.classList.add('dirty')});
+  keep.forEach(([n,vals])=>{const f=document.querySelector(`form[data-form="${n}"]`);if(!f)return;vals.forEach(([k,v])=>{const x=f.elements[k];if(!x||x.disabled)return;if(x.type==='checkbox'){x.checked=v;if(x.dataset.toggle)syncToggle(x)}else x.value=v});f.classList.add('dirty')});
   enhance();curHash=location.hash;
 }
 
 /* ---------- 로그인 ---------- */
-function viewLogin(){return `<div class="login"><div class="card"><div class="pane"><div class="brand"><i></i>KOSMOS Admin</div>
+function viewLogin(){return `<div class="login"><div class="card"><div class="pane"><div class="brand">KOSMOS Admin</div>
   <h1>로그인</h1><p class="mute">발급받은 계정으로 로그인합니다. 회원가입은 없습니다.</p>
   <form data-form="login"><label class="f"><span>아이디</span><input name="id" placeholder="발급 계정" disabled></label>
   <label class="f" style="margin-top:16px"><span>비밀번호</span><input type="password" disabled></label>
@@ -466,7 +478,7 @@ function viewDetail(r){
   const tab=tabs.find(t=>t[0]===r.tab)?r.tab:'basic';
   const tn={agenda:m.agendas.length,estimate:m.items.length,check:m.checks.length?m.checks.filter(x=>x.done).length+'/'+m.checks.length:0,req:m.reqs.filter(can.seeReq).length,contract:m.contract.versions.length};
   return `<div class="page"><a href="#/" class="mute">← 기업 목록</a>
-  <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0"><span class="mono">${c[1]}</span> · ${c[3]} · ${esc(m.title)}${can.irk()&&semBadge(db.seminar[r.cid])?` <span style="margin-left:4px">${semBadge(db.seminar[r.cid],'세미나 ')}</span>`:''}</p></div>
+  <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0">${c[3]}${can.irk()&&semBadge(db.seminar[r.cid])?` <span style="margin-left:4px">${semBadge(db.seminar[r.cid],'세미나 ')}</span>`:''}</p></div>
   <div class="right"><div class="cap">주총일시</div><div style="font-size:16px">${dt(m.date,m.time)}</div></div></div>
   <div class="tabs">${tabs.map(t=>`<a href="#/c/${r.cid}/${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}${tn[t[0]]?`<span class="n">${tn[t[0]]}</span>`:''}</a>`).join('')}</div>
   ${PANELS[tab](m,r.cid)}</div>`}
@@ -494,11 +506,14 @@ basic(m){const e=can.editBasic(),ed=editing('contact',m.contacts)||{},cl=e?m.con
   <label class="f"><span>이메일</span><input name="email" type="email" value="${esc(ed.email)}"></label><label class="f"><span>역할</span><input name="role" placeholder="IR, 법무 등" value="${esc(ed.role)}"></label>
   <span class="fix"><button class="btn">${ed.id?'수정 저장':'담당자 추가'}</button>${ed.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div><div class="err"></div></form>`:''}</div>`},
 
-schedule(m){const e=can.editBasic(),s=m.sched;
-  const rowf=(label,d,t,hint)=>`<tr><td style="width:180px">${label}</td><td style="width:200px"><input type="date" name="${d}" value="${esc(d==='date'?m.date:s[d])}"${dis(e)}></td>
-    <td style="width:160px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="mute">${hint||''}</td></tr>`;
-  return `<form class="card" data-form="schedule" novalidate><h3>운영 일정</h3><table><thead><tr><th>일정</th><th>일자</th><th>시간</th><th></th></tr></thead><tbody>
-  ${rowf('사전점검','pre_d')}${rowf('사전 모의주총','mock_d','mock_t')}${rowf('리허설','reh_d','reh_t')}${rowf('주주총회','date','time','기본정보의 주총일시와 같은 값입니다')}
+schedule(m){const e=can.editBasic(),s=m.sched,same=s.mock_same!==false,maddr=[m.address,m.addressDetail].filter(Boolean).join(' ');
+  const rowf=(label,d,t,place)=>`<tr><td class="wrap" style="width:150px">${label}</td><td class="wrap" style="width:220px"><input type="date" name="${d}" value="${esc(d==='date'?m.date:s[d])}"${dis(e)}></td>
+    <td class="wrap" style="width:150px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="wrap">${place||'<span class="soft">—</span>'}</td></tr>`;
+  const mockPlace=`<label class="ck"><input type="checkbox" name="mock_same" data-toggle="mockaddr"${same?' checked':''}${dis(e)}>주주총회와 동일</label>
+    <div id="mockaddr-same" class="mute${same?'':' x-hide'}" style="margin-top:6px">${maddr?esc(maddr):'<span class="soft">주총 장소 미정</span>'}</div>
+    <div id="mockaddr" class="grid2${same?' x-hide':''}" style="margin-top:8px;gap:8px"><input name="mock_addr" placeholder="주소" aria-label="사전 모의주총 주소" value="${esc(s.mock_addr)}"${dis(e)}><input name="mock_addr_detail" placeholder="상세주소 (건물명, 층, 회의실)" aria-label="사전 모의주총 상세주소" value="${esc(s.mock_addr_detail)}"${dis(e)}></div>`;
+  return `<form class="card" data-form="schedule" novalidate><h3>운영 일정</h3><table class="sched"><thead><tr><th>일정</th><th>일자</th><th>시간</th><th>장소</th></tr></thead><tbody>
+  ${rowf('사전점검','pre_d')}${rowf('사전 모의주총','mock_d','mock_t',mockPlace)}${rowf('리허설','reh_d','reh_t')}${rowf('주주총회','date','time',`${maddr?esc(maddr):'<span class="soft">미정</span>'}<div class="soft" style="font-size:12px;margin-top:2px">일시와 장소는 기본정보와 같은 값입니다</div>`)}
   </tbody></table><p class="soft" style="margin:12px 0 0;font-size:12px">정해지지 않은 일정은 비워 두면 "미정"으로 표시됩니다. 모든 시간은 한국시간입니다.</p>
   <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>`},
 
@@ -583,7 +598,7 @@ const intOr=(v,min)=>{v=String(v).replace(/[,\s]/g,'');if(v==='')return '';retur
 const SUBMIT={
   basic(f,m){const n=intOr(f.shareholders,0);if(n===null)return '예상 주주수는 0 이상의 정수로 입력해 주세요.';
     Object.assign(m,{date:f.date,time:f.time,address:f.address.trim(),addressDetail:f.addressDetail.trim(),notes:f.notes,shareholders:n})},
-  schedule(f,m){m.date=f.date;m.time=f.time;Object.assign(m.sched,{pre_d:f.pre_d,mock_d:f.mock_d,mock_t:f.mock_t,reh_d:f.reh_d,reh_t:f.reh_t})},
+  schedule(f,m){m.date=f.date;m.time=f.time;Object.assign(m.sched,{pre_d:f.pre_d,mock_d:f.mock_d,mock_t:f.mock_t,reh_d:f.reh_d,reh_t:f.reh_t,mock_same:!!f.mock_same,mock_addr:(f.mock_addr||'').trim(),mock_addr_detail:(f.mock_addr_detail||'').trim()})},
   contact(f,m){if(!f.name.trim())return '담당자명을 입력해 주세요.';if(!f.phone.trim()&&!f.email.trim())return '연락처와 이메일 중 하나는 입력해 주세요.';
     if(f.email.trim()&&!/^\S+@\S+\.\S+$/.test(f.email.trim()))return '이메일 형식을 확인해 주세요.';
     upsert('contact',m.contacts,{name:f.name.trim(),dept:f.dept.trim(),title:f.title.trim(),phone:f.phone.trim(),email:f.email.trim(),role:f.role.trim()});if(m.contacts.length===1)m.contacts[0].primary=true},
@@ -783,7 +798,7 @@ function viewImport(){const imp=ui.imp,sem=imp.kind==='seminar';
       <p class="soft" style="margin:12px 0 0;font-size:12px">적용하면 기존 세미나 참석 기록 전체가 이번 내용으로 바뀝니다. 현장 참석 처리된 사람만 셉니다.</p>`}
       <div class="actions"><button class="btn" data-act="impcancel">취소</button><button class="btn primary" data-act="impapply"${dis(!imp.noAtt)}>적용</button></div></div>`}
     else{const P=imp.plan,noCo=P.filter(r=>!r.co),act=P.filter(r=>r.co&&(r.chg.length||r.errs.length)),same=P.filter(r=>r.co&&!r.chg.length&&!r.errs.length).length,
-      cnt=t=>P.reduce((s,r)=>s+r.chg.filter(c=>c.t===t).length,0),fmt=(c,k)=>k==='shareholders'?won(c):esc(c);
+      cnt=t=>P.reduce((s,r)=>s+r.chg.filter(c=>c.t===t).length,0),fmt=(c,k)=>k==='shareholders'?won(c):k==='date'?esc(fmtD(c)):esc(c);
       const line=(rec,c,j)=>c.t==='new'?`<div class="chg"><span class="badge blue">담당자 추가</span>${esc(c.d.name)} <span class="mute">${esc([c.d.dept,c.d.title,c.d.phone,c.d.email].filter(Boolean).join(' · '))}</span>${c.primary?'<span class="badge blue">메인</span>':''}</div>`
         :c.t==='primary'?`<div class="chg"><span class="badge blue">메인 지정</span>${esc(c.who)}</div>`
         :`<div class="chg"><span class="badge${c.t==='conflict'?' warn':''}">${c.t==='conflict'?'값이 다름':'빈칸 채움'}</span><span class="mute">${c.who?esc(c.who)+' ':''}${FLABEL[c.k]}</span>${c.t==='conflict'?`<span class="old">${fmt(c.old,c.k)}</span> →`:''} ${fmt(c.nv,c.k)}
@@ -844,6 +859,7 @@ const GLOBAL_FORMS={
 };
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.map!==undefined){const imp=ui.imp,i=+t.dataset.map;if(t.value)imp.map=imp.map.map((v,j)=>j!==i&&v===t.value?'':v);imp.map[i]=t.value;imp.pick={};analyze();render()}
+  else if(t.dataset.toggle){syncToggle(t);if(!t.checked)document.querySelector('[name=mock_addr]')?.focus()}
   else if(t.dataset.pick){ui.imp.pick[t.dataset.pick]=t.checked}
   else if(t.dataset.agp){const [i,k]=t.dataset.agp.split(':'),x=ui.agp.rows[+i];x[k]=t.value;if(k==='type'){x.guess=false;x.rawType='';const r=resFor(x.type);if(r&&!x.resManual){x.res=r;x.resAuto=true}}if(k==='res'){x.resManual=true;x.resAuto=false}if(t.tagName==='SELECT')render()}
   else if(t.id==='agpfile'&&t.files[0]){readAgendaPdf(t.files[0])}
