@@ -512,7 +512,7 @@ agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
   <label class="f"><span>의안 종류 *</span><select name="type"><option value="">선택</option>${AGENDA_TYPES.map(g=>`<optgroup label="${g[0]}">${opt(g[1],ed.type)}</optgroup>`).join('')}</select></label>
   <label class="f fix" style="width:140px"><span>결의방법 *</span><select name="res"><option value="">선택</option>${opt(['보통결의','특별결의'],ed.res)}</select></label></div>
   <div class="grid2" style="margin-top:12px"><label class="f"><span>의안명 (국문) *</span><input name="ko" value="${esc(ed.ko)}"></label><label class="f"><span>의안명 (영문)</span><input name="en" value="${esc(ed.en)}"></label></div>
-  <p class="soft" style="margin:12px 0 0;font-size:12px">의안 종류를 골라도 결의방법은 자동으로 정해지지 않습니다. 직접 선택해 주세요.</p>
+  <p class="soft" style="margin:12px 0 0;font-size:12px">의안 종류를 고르면 결의방법이 일반 기준에 따라 자동 선택됩니다. 정관이나 사안에 따라 다르면 바꿔 주세요. "기타"는 직접 선택합니다.</p>
   <div class="err"></div><div class="actions">${ed.id?'<button type="button" class="btn" data-act="cancel">취소</button>':''}<button class="btn primary">${ed.id?'수정 저장':'의안 추가'}</button></div></form>${agendaPaste()}`:''}`},
 
 estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x.qty*x.price,0),em=editing('memo',m.memos)||{};
@@ -599,7 +599,7 @@ const SUBMIT={
     else{const n=Math.max(...rows.map(r=>r.length));ix=n>=4?{no:0,type:1,res:2,ko:3,en:4}:{no:-1,type:0,res:1,ko:2,en:-1}}
     const all=AGENDA_TYPES.flatMap(g=>g[1]),g=(r,i)=>i>=0?(r[i]||''):'';
     ui.agp={text:f.text,rows:(isHd?rows.slice(1):rows).map(r=>{const t=all.find(x=>nrm(x)===nrm(g(r,ix.type))),rs=g(r,ix.res),res=rs.includes('특별')?'특별결의':rs.includes('보통')?'보통결의':'',ko=g(r,ix.ko);
-      return {no:g(r,ix.no),type:t||'',rawType:t?'':g(r,ix.type),res,ko,en:g(r,ix.en)}})};
+      const auto=!res&&resFor(t||'');return {no:g(r,ix.no),type:t||'',rawType:t?'':g(r,ix.type),res:res||auto||'',resAuto:!!auto,resManual:!!res,ko,en:g(r,ix.en)}})};
     return ['미리보기를 확인해 주세요']},
   check(f,m){if(!f.title.trim())return '체크 항목을 입력해 주세요.';m.checks.push(stamp({id:nid(),title:f.title.trim(),done:false},true))},
   req(f,m){if(!f.body.trim())return '요구사항 내용을 입력해 주세요.';
@@ -653,6 +653,9 @@ document.addEventListener('input',e=>{if(e.target.id!=='q')return;ui.q=e.target.
 
 /* ---------- 의안 붙여넣기 ---------- */
 const AG_ALL=AGENDA_TYPES.flatMap(g=>g[1]);
+// 의안 종류별 결의방법 초기값(상법상 일반 기준). 정관·사안에 따라 다를 수 있어 항상 수정할 수 있게 둔다.
+const RES_SPECIAL=['정관 변경','정관변경(집중투표 배제 및 해지)','이사해임','감사해임','감사위원회 감사위원 해임(독립이사)','감사위원회 감사위원 해임(일반)','합병계약서의 승인','분할계획서의 승인','분할합병계약서의 승인','영업의 양도/양수 및 포괄적 계약 체결 승인'];
+const resFor=t=>!AG_ALL.includes(t)||t==='기타'?'':RES_SPECIAL.includes(t)?'특별결의':'보통결의';
 const agpErr=x=>!AG_ALL.includes(x.type)?'의안 종류를 선택해 주세요':!x.res?'결의방법을 선택해 주세요':!String(x.ko).trim()?'국문 의안명을 입력해 주세요':'';
 // 의안명에서 의안 종류를 추정한다. 제안값일 뿐이며 사용자가 확인한다. 결의방법은 추정하지 않는다(AGD-02).
 function guessType(t){const s=t.replace(/\s+/g,'');
@@ -684,7 +687,7 @@ function parseAgendaLines(lines){const seen=new Map();
     let ko=m[3].replace(/^[\s:：\-–·]+/,'').trim();const k=ko.search(/건(?=\s|$|[(),.;])/);if(k>0)ko=ko.slice(0,k+1);
     const no=m[1]+(m[2]?'-'+m[2]:'');if(ko.length<3||seen.has(no))continue;seen.set(no,ko)}
   return [...seen].sort((a,b)=>{const x=a[0].split('-').map(Number),y=b[0].split('-').map(Number);return x[0]-y[0]||(x[1]||0)-(y[1]||0)})
-    .map(([no,ko])=>{const t=guessType(ko);return {no,type:t,guess:!!t,res:'',ko,en:''}})}
+    .map(([no,ko])=>{const t=guessType(ko),r=resFor(t);return {no,type:t,guess:!!t,res:r,resAuto:!!r,ko,en:''}})}
 async function readAgendaPdf(file){ui.agp={text:'',loading:file.name};render();
   try{const rows=parseAgendaLines(await pdfLines(file));
     ui.agp=rows.length?{text:'',rows,src:file.name}:{text:'',msg:`"${file.name}" 에서 의안을 찾지 못했습니다. 스캔한 이미지 PDF이거나 "제1호 의안" 형식이 아닐 수 있습니다. 시트 붙여넣기나 직접 입력을 이용해 주세요.`}}
@@ -695,14 +698,14 @@ function agendaPaste(){const a=ui.agp||{},rows=a.rows||[],ok=rows.filter(x=>!agp
   return `<form class="card entry" data-form="agendapaste" novalidate><h3>한 번에 등록</h3>
   <div class="grid2"><label class="f"><span>구글 시트에서 붙여넣기</span><textarea name="text" style="min-height:120px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="열 순서: 의안번호, 의안 종류, 결의방법, 의안명(국문), 의안명(영문)&#10;제목 줄이 있으면 제목으로 열을 찾습니다.">${esc(a.text)}</textarea></label>
   <div><label class="f"><span>또는 주총소집공고 PDF</span><input type="file" id="agpfile" accept=".pdf,application/pdf"></label>
-  <p class="soft" style="margin:8px 0 0;font-size:12px">소집공고에서 "제1호 의안: …" 줄을 찾아 의안번호와 의안명을 채웁니다. 의안 종류는 의안명으로 추정해 제안하고, 결의방법은 직접 선택합니다. 파일은 저장하지 않고 이 브라우저에서만 읽습니다.</p></div></div>
+  <p class="soft" style="margin:8px 0 0;font-size:12px">소집공고에서 "제1호 의안: …" 줄을 찾아 의안번호와 의안명을 채웁니다. 의안 종류는 의안명으로 추정하고 결의방법은 종류에 따라 자동 선택합니다. 둘 다 미리보기에서 바꿀 수 있습니다. 파일은 저장하지 않고 이 브라우저에서만 읽습니다.</p></div></div>
   <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="agpsample">시트 예시 넣기</button><button class="btn${a.rows?' sub':''}">붙여넣은 내용 미리보기</button></div>
   ${a.loading?`<p class="mute" style="margin:16px 0 0">"${esc(a.loading)}" 을 읽는 중입니다…</p>`:''}${a.msg?`<p style="margin:16px 0 0;color:var(--warning)">${esc(a.msg)}</p>`:''}
-  ${a.rows?`${a.src?`<p style="margin:16px 0 0"><span class="badge blue">PDF</span> "${esc(a.src)}" 에서 의안 ${rows.length}건을 찾았습니다. 의안 종류와 의안명을 확인하고 결의방법을 선택해 주세요.</p>`:''}
+  ${a.rows?`${a.src?`<p style="margin:16px 0 0"><span class="badge blue">PDF</span> "${esc(a.src)}" 에서 의안 ${rows.length}건을 찾았습니다. 의안 종류와 결의방법은 자동으로 채운 값이니 확인하고 필요하면 바꿔 주세요.</p>`:''}
   <table style="margin-top:12px"><thead><tr><th style="width:84px">번호</th><th style="width:280px">의안 종류</th><th style="width:140px">결의방법</th><th>의안명 (국문)</th><th style="width:150px">상태</th></tr></thead><tbody>
   ${rows.map((x,i)=>{const e=agpErr(x);return `<tr><td class="wrap"><input class="mono" data-agp="${i}:no" value="${esc(x.no)}" aria-label="의안번호"></td>
   <td class="wrap"><select data-agp="${i}:type" aria-label="의안 종류"><option value="">선택</option>${AGENDA_TYPES.map(g=>`<optgroup label="${g[0]}">${opt(g[1],x.type)}</optgroup>`).join('')}</select>${x.rawType?`<div class="soft" style="font-size:12px;margin-top:4px">시트 값: ${esc(x.rawType)}</div>`:x.guess&&x.type?'<div class="soft" style="font-size:12px;margin-top:4px">의안명으로 추정</div>':''}</td>
-  <td class="wrap"><select data-agp="${i}:res" aria-label="결의방법"><option value="">선택</option>${opt(['보통결의','특별결의'],x.res)}</select></td>
+  <td class="wrap"><select data-agp="${i}:res" aria-label="결의방법"><option value="">선택</option>${opt(['보통결의','특별결의'],x.res)}</select>${x.resAuto&&x.res?'<div class="soft" style="font-size:12px;margin-top:4px">종류에 따라 자동 선택</div>':''}</td>
   <td class="wrap"><input data-agp="${i}:ko" value="${esc(x.ko)}" aria-label="의안명">${x.en?`<div class="soft" style="font-size:12px;margin-top:4px">${esc(x.en)}</div>`:''}</td>
   <td class="wrap">${e?`<span class="badge warn">확인 필요</span>`:'<span class="badge blue">추가</span>'} <button type="button" class="btn sm" data-act="agprm" data-i="${i}">빼기</button>${e?`<div style="color:var(--warning);font-size:12px;margin-top:4px">${e}</div>`:''}</td></tr>`}).join('')}</tbody></table>
   <p class="soft" style="margin:12px 0 0;font-size:12px">기존 의안 뒤에 추가됩니다. "확인 필요" 줄은 값을 채우면 추가 대상이 되고, 채우지 않으면 빠집니다.</p>
@@ -842,8 +845,9 @@ const GLOBAL_FORMS={
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.map!==undefined){const imp=ui.imp,i=+t.dataset.map;if(t.value)imp.map=imp.map.map((v,j)=>j!==i&&v===t.value?'':v);imp.map[i]=t.value;imp.pick={};analyze();render()}
   else if(t.dataset.pick){ui.imp.pick[t.dataset.pick]=t.checked}
-  else if(t.dataset.agp){const [i,k]=t.dataset.agp.split(':'),x=ui.agp.rows[+i];x[k]=t.value;if(k==='type'){x.guess=false;x.rawType=''}if(t.tagName==='SELECT')render()}
+  else if(t.dataset.agp){const [i,k]=t.dataset.agp.split(':'),x=ui.agp.rows[+i];x[k]=t.value;if(k==='type'){x.guess=false;x.rawType='';const r=resFor(x.type);if(r&&!x.resManual){x.res=r;x.resAuto=true}}if(k==='res'){x.resManual=true;x.resAuto=false}if(t.tagName==='SELECT')render()}
   else if(t.id==='agpfile'&&t.files[0]){readAgendaPdf(t.files[0])}
+  else if(t.name==='type'&&t.form&&t.form.dataset.form==='agenda'){const r=resFor(t.value);if(r){t.form.elements.res.value=r;render()}}
   else if(t.id==='impfile'&&t.files[0]){t.files[0].text().then(x=>{ui.imp={kind:ui.imp.kind,text:x};render()})}});
 document.addEventListener('input',e=>{if(e.target.id==='imptext')ui.imp.text=e.target.value});
 
