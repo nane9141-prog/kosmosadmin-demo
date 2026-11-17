@@ -210,7 +210,10 @@ tr.off td .badge{color:var(--ink-soft)}
 .btn,input,select,textarea,.ctl,td,.tabs a,.nav a{transition:border-color .15s ease-out,background-color .15s ease-out,color .15s ease-out}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 .syncbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px 8px 16px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);font-size:12px}
-.wd{flex:none;margin-right:2px;font-size:12px;color:var(--ink-mute)}
+.wd{flex:none;color:var(--ink-mute)}
+.wd:not(:empty){margin-left:6px}
+.sp{flex:1;align-self:stretch;cursor:text}
+.ctl-w.has .ctl-in{flex:none;padding-right:0}
 .ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 table.sched td.wrap{vertical-align:top;padding-top:10px;padding-bottom:10px;white-space:normal}
 table.sched td:first-child{padding-top:18px}
@@ -490,9 +493,12 @@ function enhance(){
   });
   document.querySelectorAll('input[type=date]:not(.x-hide)').forEach(inp=>{
     const b=mkPick(inp,ICON.cal,'직접 입력: 2027.03.19 또는 20270319'),txt=b.txt;
-    const wdEl=document.createElement('span');wdEl.className='wd';b.insertBefore(wdEl,b.btn);
-    const sync=()=>{txt.value=inp.value?inp.value.replaceAll('-','.'):'';wdEl.textContent=inp.value?`(${wd(inp.value)})`:'';b.classList.remove('bad')};sync();
-    txt.addEventListener('input',()=>{const d=normDate(txt.value.trim());wdEl.textContent=d?`(${wd(d)})`:''});
+    // 요일은 날짜 글자 바로 뒤에 붙인다: 입력칸 폭을 글자 수에 맞추고 남는 자리는 빈칸으로 채운다
+    const wdEl=document.createElement('span');wdEl.className='wd';const sp=document.createElement('span');sp.className='sp';b.insertBefore(wdEl,b.btn);b.insertBefore(sp,b.btn);
+    const fit=()=>{const v=txt.value,n=v.length+(v.match(/[^\x00-\x7F]/g)||[]).length;b.classList.toggle('has',n>0);txt.style.width=n?`calc(${Math.max(n,4)}ch + 12px)`:''};
+    const sync=()=>{txt.value=inp.value?inp.value.replaceAll('-','.'):'';wdEl.textContent=inp.value?`(${wd(inp.value)})`:'';b.classList.remove('bad');fit()};sync();
+    txt.addEventListener('input',()=>{const d=normDate(txt.value.trim());wdEl.textContent=d?`(${wd(d)})`:'';fit()});
+    b.addEventListener('mousedown',e=>{if(e.target===b||e.target===sp||e.target===wdEl){e.preventDefault();txt.focus()}});
     txt.addEventListener('change',()=>{const v=txt.value.trim();if(!v){setVal(inp,'');sync();return}const d=normDate(v);if(d){setVal(inp,d);sync()}else b.classList.add('bad')});
     b.btn.onclick=()=>openPop(b,false,el=>{
       const now=new Date(),today=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}`;
