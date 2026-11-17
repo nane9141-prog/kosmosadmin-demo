@@ -214,9 +214,23 @@ tr.off td .badge{color:var(--ink-soft)}
 .ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 table.sched td.wrap{vertical-align:top;padding-top:10px;padding-bottom:10px;white-space:normal}
 table.sched td:first-child{padding-top:18px}
-.svc{margin-top:16px;padding-top:16px;border-top:1px solid var(--hairline)}
-.cks{display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:10px}
-.subbox{margin-top:12px;padding:14px 16px;border-radius:10px;background:var(--sunken);max-width:560px}
+/* 서비스 이용 항목: 선택 타일 */
+.svc{margin-top:20px;padding-top:20px;border-top:1px solid var(--hairline)}
+.svc-grid{display:grid;grid-template-columns:3fr 1fr;gap:12px}
+.svc-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:22px}
+.svc-h h4{margin:0;font-size:14px;font-weight:500}
+.svc-h .soft{font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tiles.one{grid-template-columns:1fr}
+.tile{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);cursor:pointer;white-space:nowrap;transition:border-color .15s ease-out,background-color .15s ease-out}
+.tile:hover{border-color:var(--hairline-strong)}
+.tile:has(input:checked){border-color:var(--primary);background:var(--primary-soft)}
+.tile:has(input:focus-visible){outline:2px solid var(--ink);outline-offset:2px}
+.tile:has(input:disabled){background:var(--sunken);color:var(--ink-mute);cursor:not-allowed}
+.fight{margin-top:12px;padding:14px 16px 16px;border-radius:10px;background:var(--tray);box-shadow:inset 3px 0 0 var(--primary)}
+.fight-row{display:flex;gap:8px;align-items:center}
+.fight-row .tile{flex:none}
+.fight-row .f{flex:1;min-width:0}
 .dl{display:grid;grid-template-columns:200px 1fr;margin:0}
 .dl dt{color:var(--ink-mute);padding:12px 0;border-bottom:1px solid var(--hairline)}
 .dl dd{margin:0;padding:12px 0;border-bottom:1px solid var(--hairline);min-height:45px}
@@ -298,7 +312,10 @@ table.sched td:first-child{padding-top:18px}
   .syncbar,.stat,.steps,.total{flex-wrap:wrap}
   .stat{gap:16px 24px}
   .steps li+li::before{width:12px}
-  .cks{gap:0 24px}
+  .svc-grid,.tiles{grid-template-columns:1fr}
+  .tile{height:44px}
+  .fight-row{flex-direction:column;align-items:stretch}
+  .svc-h{flex-wrap:wrap}
   .dl{grid-template-columns:1fr}
   .dl dt{padding:12px 0 0;border-bottom:0;font-size:12px}
   .dl dd{padding:2px 0 12px;min-height:0}
@@ -599,14 +616,16 @@ basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.ed
   <div class="grid2" style="margin-top:12px"><label class="f"><span>주소</span><input name="address" value="${esc(m.address)}"${dis(e)}></label>
   <label class="f"><span>상세주소</span><input name="addressDetail" placeholder="건물명, 층, 회의실" value="${esc(m.addressDetail)}"${dis(e)}></label></div>
   <label class="f" style="margin-top:12px"><span>주총소집지 특이사항</span><textarea name="notes"${dis(e)}>${esc(m.notes)}</textarea></label>
-  <div class="svc"><span class="cap">서비스 이용 항목</span>
-  <div class="cks"><label class="ck"><input type="checkbox" name="svc_evote"${sv.evote?' checked':''}${dis(e)}>전자투표</label>
-  <label class="ck"><input type="checkbox" name="svc_eproxy"${sv.eproxy?' checked':''}${dis(e)}>전자위임장</label>
-  <label class="ck"><input type="checkbox" name="svc_solicit" data-show="solicit-box"${sv.solicit?' checked':''}${dis(e)}>의결권 대리행사 권유</label></div>
-  ${e?`<div id="solicit-box" class="subbox${sv.solicit?'':' x-hide'}"><label class="ck"><input type="checkbox" name="opp_exists" data-show="opp-name"${sv.oppExists?' checked':''}>의결권 공방 상대측 있음</label>
-  <label class="f${sv.oppExists?'':' x-hide'}" id="opp-name" style="margin-top:10px"><span>상대측 (누구인지)</span><input name="opp_name" placeholder="예: 2대 주주, 행동주의 펀드, 소액주주연대" value="${esc(sv.oppName)}"></label>
-  <p class="soft" style="margin:8px 0 0;font-size:12px">의결권 공방 정보는 IR큐더스에만 보입니다.</p></div>`:''}
-  <div class="cks" style="margin-top:16px"><span class="cap" style="width:100%;margin-bottom:-6px">집중투표</span><label class="ck"><input type="checkbox" name="cumulative"${sv.cumulative?' checked':''}${dis(e)}>집중투표 실시</label></div></div>
+  <div class="svc">
+  <div class="svc-grid"><div><div class="svc-h"><h4>서비스 이용 항목</h4><span class="soft">이용하는 항목을 모두 선택</span></div>
+  <div class="tiles"><label class="tile"><input type="checkbox" name="svc_evote"${sv.evote?' checked':''}${dis(e)}>전자투표</label>
+  <label class="tile"><input type="checkbox" name="svc_eproxy"${sv.eproxy?' checked':''}${dis(e)}>전자위임장</label>
+  <label class="tile"><input type="checkbox" name="svc_solicit" data-show="solicit-box"${sv.solicit?' checked':''}${dis(e)}>의결권 대리행사 권유</label></div></div>
+  <div><div class="svc-h"><h4>집중투표</h4></div>
+  <div class="tiles one"><label class="tile"><input type="checkbox" name="cumulative"${sv.cumulative?' checked':''}${dis(e)}>집중투표 실시</label></div></div></div>
+  <div id="solicit-box" class="fight${sv.solicit?'':' x-hide'}"><div class="svc-h"><h4>의결권 공방</h4><span class="badge">IR큐더스 전용</span><span class="soft">의결권 대리행사 권유를 이용할 때만 적습니다</span></div>
+  <div class="fight-row"><label class="tile"><input type="checkbox" name="opp_exists" data-show="opp-name"${sv.oppExists?' checked':''}>상대측 있음</label>
+  <label class="f${sv.oppExists?'':' x-hide'}" id="opp-name"><input name="opp_name" aria-label="의결권 공방 상대측" placeholder="상대측이 누구인지 (예: 2대 주주, 행동주의 펀드, 소액주주연대)" value="${esc(sv.oppName)}"></label></div></div></div>
   <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>
   <div class="card"><h3>고객사 담당자 <span class="mute">${cl.length}명</span></h3>
   ${cl.length?`<table><thead><tr><th>담당자명</th><th>부서·직급</th><th>연락처</th><th>이메일</th><th>역할</th>${e?'<th></th>':''}</tr></thead><tbody>
