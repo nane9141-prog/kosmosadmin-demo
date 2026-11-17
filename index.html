@@ -172,6 +172,8 @@ td .btn+.btn{margin-left:4px}
 .entry button.btn:not([type=button]):not(.primary):not(.sub){background:var(--primary);border-color:var(--primary);color:var(--canvas)}
 .entry button.btn:not([type=button]):not(.primary):not(.sub):hover{background:var(--primary-hover);border-color:var(--primary-hover)}
 .entry.editing h3::before{content:"✎";font-size:11px}
+.entry td.wrap{padding-top:8px;padding-bottom:8px;vertical-align:top}
+.entry th{background:var(--canvas)}
 /* 카드 제목 */
 .card>h3,.card>.head h3{font-size:16px}
 .card h3 .mute{font-size:14px;margin-left:4px}
@@ -207,6 +209,7 @@ tr.off td .badge{color:var(--ink-soft)}
 .btn:focus-visible,a:focus-visible,.sw:focus-visible,.ctl-ic:focus-visible,tr.link:focus-visible,.acct:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .btn,input,select,textarea,.ctl,td,.tabs a,.nav a{transition:border-color .15s ease-out,background-color .15s ease-out,color .15s ease-out}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+.syncbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px 8px 16px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);font-size:12px}
 /* 기타 */
 .demo{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:6px 24px;font-size:12px;color:var(--ink-mute);display:flex;gap:8px;align-items:center}
 .login{min-height:100vh;display:grid;place-items:center;padding:48px 24px}
@@ -437,6 +440,9 @@ function listRows(){
   return COMPANIES.filter(c=>can.seeCompany(c[0])&&(!q||c[2].toLowerCase().includes(q)||c[1].toLowerCase().includes(q)));
 }
 const mainOf=m=>m?m.contacts.find(x=>x.primary):null;
+// 세미나: 현장 참석이 있으면 참석, 없으면 사전등록(신청) 인원을 보여준다
+function semBadge(sm,pre=''){if(!sm)return '';const att=sm.att??sm.count??0,reg=sm.reg??0;
+  return att>0?`<span class="badge blue">${pre}참석 ${att}명</span>`:reg>0?`<span class="badge">${pre}신청 ${reg}명</span>`:''}
 function listBody(){
   const rows=listRows(),sc=can.seeContract(),irk=can.irk();
   if(!rows.length)return `<div class="empty">검색결과가 없습니다.</div>`;
@@ -446,11 +452,12 @@ function listBody(){
     <td>${mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'<span class="soft">—</span>'}</td>
     ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">—</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">—</span>'}</td>`:''}
     <td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">—</span>'}</td>
-    ${irk?`<td>${sm?`<span class="badge blue">참석 ${sm.count}명</span>`:'<span class="soft">—</span>'}</td>`:''}</tr>`}).join('')}
+    ${irk?`<td>${semBadge(sm)||'<span class="soft">—</span>'}</td>`:''}</tr>`}).join('')}
   </tbody></table>`}
 function viewList(){const n=listRows().length;
   return `<div class="page"><div class="head"><div><h1>기업 목록</h1><p class="mute" style="margin:4px 0 0">${user.org==='irk'?'초기 관리대상 '+COMPANIES.length+'개사':'배정된 기업'} · <span id="cnt">${n}</span>곳 표시</p></div>
   <div style="width:320px"><input id="q" placeholder="기업명 또는 종목코드 검색" value="${esc(ui.q)}" autocomplete="off"></div></div>
+  ${can.irk()?`<div class="syncbar"><span>세미나 사전등록 DB 연동</span><span class="soft">${db.seminarAt?'마지막으로 불러온 시각 '+stampStr(db.seminarAt):'아직 불러오지 않았습니다'}</span><span style="flex:1"></span><button class="btn sm" data-act="semsync">지금 불러오기</button></div>`:''}
   <div class="card" id="list" style="padding:12px">${listBody()}</div></div>`}
 
 /* ---------- 기업 상세 ---------- */
@@ -459,7 +466,7 @@ function viewDetail(r){
   const tab=tabs.find(t=>t[0]===r.tab)?r.tab:'basic';
   const tn={agenda:m.agendas.length,estimate:m.items.length,check:m.checks.length?m.checks.filter(x=>x.done).length+'/'+m.checks.length:0,req:m.reqs.filter(can.seeReq).length,contract:m.contract.versions.length};
   return `<div class="page"><a href="#/" class="mute">← 기업 목록</a>
-  <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0"><span class="mono">${c[1]}</span> · ${c[3]} · ${esc(m.title)}${can.irk()&&db.seminar[r.cid]?` <span class="badge blue" style="margin-left:4px">세미나 참석 ${db.seminar[r.cid].count}명</span>`:''}</p></div>
+  <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0"><span class="mono">${c[1]}</span> · ${c[3]} · ${esc(m.title)}${can.irk()&&semBadge(db.seminar[r.cid])?` <span style="margin-left:4px">${semBadge(db.seminar[r.cid],'세미나 ')}</span>`:''}</p></div>
   <div class="right"><div class="cap">주총일시</div><div style="font-size:16px">${dt(m.date,m.time)}</div></div></div>
   <div class="tabs">${tabs.map(t=>`<a href="#/c/${r.cid}/${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}${tn[t[0]]?`<span class="n">${tn[t[0]]}</span>`:''}</a>`).join('')}</div>
   ${PANELS[tab](m,r.cid)}</div>`}
@@ -592,7 +599,7 @@ const SUBMIT={
     else{const n=Math.max(...rows.map(r=>r.length));ix=n>=4?{no:0,type:1,res:2,ko:3,en:4}:{no:-1,type:0,res:1,ko:2,en:-1}}
     const all=AGENDA_TYPES.flatMap(g=>g[1]),g=(r,i)=>i>=0?(r[i]||''):'';
     ui.agp={text:f.text,rows:(isHd?rows.slice(1):rows).map(r=>{const t=all.find(x=>nrm(x)===nrm(g(r,ix.type))),rs=g(r,ix.res),res=rs.includes('특별')?'특별결의':rs.includes('보통')?'보통결의':'',ko=g(r,ix.ko);
-      return {no:g(r,ix.no),type:t||g(r,ix.type),res:res||rs,ko,en:g(r,ix.en),err:!t?'의안 종류가 목록에 없습니다':!res?'결의방법을 읽을 수 없습니다':!ko?'국문 의안명이 없습니다':''}})};
+      return {no:g(r,ix.no),type:t||'',rawType:t?'':g(r,ix.type),res,ko,en:g(r,ix.en)}})};
     return ['미리보기를 확인해 주세요']},
   check(f,m){if(!f.title.trim())return '체크 항목을 입력해 주세요.';m.checks.push(stamp({id:nid(),title:f.title.trim(),done:false},true))},
   req(f,m){if(!f.body.trim())return '요구사항 내용을 입력해 주세요.';
@@ -632,24 +639,73 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   else if(a==='impcancel'){ui.imp={kind:ui.imp.kind,text:''};render()}
   else if(a==='impapply'){applyImport()}
   else if(a==='acct'){const x=accounts().find(x=>x.id===+el.dataset.id),to=el.dataset.to;x.status=to;if(to==='issued'&&!x.issuedAt)x.issuedAt=new Date().toISOString();commit({issued:'발급 처리했습니다',inactive:'비활성으로 바꿨습니다'}[to])}
-  else if(a==='agpapply'){const ok=ui.agp.rows.filter(x=>!x.err);ok.forEach(x=>m.agendas.push(stamp({id:nid(),no:x.no,type:x.type,res:x.res,ko:x.ko,en:x.en},true)));ui.agp=null;commit(`의안 ${ok.length}건을 추가했습니다`)}
-  else if(a==='agpcancel'){ui.agp=null;render()}
+  else if(a==='agpapply'){const ok=ui.agp.rows.filter(x=>!agpErr(x));ok.forEach(x=>m.agendas.push(stamp({id:nid(),no:x.no,type:x.type,res:x.res,ko:x.ko,en:x.en},true)));ui.agp=null;commit(`의안 ${ok.length}건을 추가했습니다`)}
+  else if(a==='agpcancel'){clearDirty();ui.agp=null;render()}
+  else if(a==='agprm'){ui.agp.rows.splice(+el.dataset.i,1);if(!ui.agp.rows.length)ui.agp=null;render()}
   else if(a==='agpsample'){ui.agp={text:'의안번호\t의안 종류\t결의방법\t의안명(국문)\t의안명(영문)\n1\t재무제표 승인\t보통결의\t제58기 재무제표 승인의 건\tApproval of Financial Statements\n2\t정관 변경\t특별결의\t정관 일부 변경의 건\t\n3-1\t이사선임\t보통\t사내이사 홍길동 선임의 건\t\n3-2\t이사 선임\t보통결의\t사외이사 김영희 선임의 건\t\n4\t주식매수선택권 부여\t특별결의\t주식매수선택권 부여의 건\t',rows:null};render()}
   else if(a==='acctopen'){ui.acctOpen=true;render();document.getElementById('acct-text')?.focus()}
   else if(a==='acctclose'){clearDirty();ui.acctOpen=false;render()}
+  else if(a==='semsync'){const S={};COMPANIES.forEach(c=>{if(c[0]%4===1){const reg=1+c[0]%2;S[c[0]]={reg,att:c[0]%8===1?reg:0}}});db.seminar=S;db.seminarAt=new Date().toISOString();
+    const v=Object.values(S);commit(`세미나 DB에서 신청 ${v.length}곳, 참석 ${v.filter(x=>x.att).length}곳을 불러왔습니다 (시연용 값)`)}
   else if(a==='reset'){if(ui.confirm==='reset'){db=fresh();commit('입력 내용을 초기화했습니다')}else{ui.confirm='reset';el.textContent='한 번 더 누르면 초기화';el.classList.add('danger')}}
 });
 document.addEventListener('input',e=>{if(e.target.id!=='q')return;ui.q=e.target.value;document.getElementById('list').innerHTML=listBody();document.getElementById('cnt').textContent=listRows().length});
 
 /* ---------- 의안 붙여넣기 ---------- */
-function agendaPaste(){const a=ui.agp||{},ok=(a.rows||[]).filter(x=>!x.err).length;
-  return `<form class="card entry" data-form="agendapaste" novalidate><h3>시트에서 붙여넣어 한 번에 등록</h3>
-  <textarea name="text" style="min-height:120px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="구글 시트에서 의안 목록을 복사해 붙여넣으세요.&#10;열 순서: 의안번호, 의안 종류, 결의방법, 의안명(국문), 의안명(영문). 제목 줄이 있으면 제목으로 열을 찾습니다.">${esc(a.text)}</textarea>
-  <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="agpsample">예시 넣기</button><button class="btn${a.rows?' sub':''}">미리보기</button></div>
-  ${a.rows?`<table style="margin-top:16px"><thead><tr><th>번호</th><th>의안 종류</th><th>결의방법</th><th>의안명</th><th>상태</th></tr></thead><tbody>
-  ${a.rows.map(x=>`<tr><td class="mono">${esc(x.no)}</td><td>${esc(x.type)}</td><td>${esc(x.res)}</td><td class="wrap">${esc(x.ko)}${x.en?`<div class="soft" style="font-size:12px">${esc(x.en)}</div>`:''}</td>
-  <td>${x.err?`<span class="badge warn">제외</span> <span style="color:var(--warning);font-size:12px">${x.err}</span>`:'<span class="badge blue">추가</span>'}</td></tr>`).join('')}</tbody></table>
-  <p class="soft" style="margin:12px 0 0;font-size:12px">기존 의안 뒤에 추가됩니다. 제외된 줄은 내용을 고쳐 다시 붙여넣거나 위 양식으로 직접 입력해 주세요.</p>
+const AG_ALL=AGENDA_TYPES.flatMap(g=>g[1]);
+const agpErr=x=>!AG_ALL.includes(x.type)?'의안 종류를 선택해 주세요':!x.res?'결의방법을 선택해 주세요':!String(x.ko).trim()?'국문 의안명을 입력해 주세요':'';
+// 의안명에서 의안 종류를 추정한다. 제안값일 뿐이며 사용자가 확인한다. 결의방법은 추정하지 않는다(AGD-02).
+function guessType(t){const s=t.replace(/\s+/g,'');
+  if(s.includes('보수'))return s.includes('이사')?'이사 보수한도 승인':s.includes('감사')?'감사 보수한도 승인':'';
+  if(s.includes('감사위원'))return (s.includes('해임')?'감사위원회 감사위원 해임':'감사위원회 감사위원 선임')+(/(사외|독립)이사/.test(s)?'(독립이사)':'(일반)');
+  if(s.includes('정관'))return s.includes('집중투표')?'정관변경(집중투표 배제 및 해지)':'정관 변경';
+  if(s.includes('재무제표'))return '재무제표 승인';
+  if(s.includes('배당'))return '이익 배당';
+  if(s.includes('분할합병'))return '분할합병계약서의 승인';
+  if(s.includes('합병'))return '합병계약서의 승인';
+  if(s.includes('분할'))return '분할계획서의 승인';
+  if(s.includes('영업')&&/양도|양수/.test(s))return '영업의 양도/양수 및 포괄적 계약 체결 승인';
+  if(s.includes('이사'))return s.includes('해임')?'이사해임':s.includes('선임')?'이사선임':'';
+  if(s.includes('감사'))return s.includes('해임')?'감사해임':s.includes('선임')?'감사선임':'';
+  return ''}
+let pdfjsP;
+function loadPdfjs(){const tryLoad=base=>new Promise((res,rej)=>{const el=document.createElement('script');el.src=base+'pdf.min.js';
+    el.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+'pdf.worker.min.js';res(window.pdfjsLib)};el.onerror=()=>{el.remove();rej(new Error('load'))};document.head.appendChild(el)});
+  return pdfjsP||(pdfjsP=tryLoad('vendor/').catch(()=>tryLoad('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/')).catch(e=>{pdfjsP=null;throw e}))}
+async function pdfLines(file){const lib=await loadPdfjs(),doc=await lib.getDocument({data:await file.arrayBuffer()}).promise,lines=[];
+  for(let p=1;p<=doc.numPages;p++){const tc=await (await doc.getPage(p)).getTextContent(),rows={};
+    tc.items.forEach(it=>{if(!it.str)return;const y=Math.round(it.transform[5]/3)*3;(rows[y]=rows[y]||[]).push({x:it.transform[4],w:it.width||0,s:it.str})});
+    Object.keys(rows).map(Number).sort((a,b)=>b-a).forEach(y=>{let out='',end=null;
+      rows[y].sort((a,b)=>a.x-b.x).forEach(it=>{if(end!==null&&it.x-end>1.5&&!out.endsWith(' '))out+=' ';out+=it.s;end=it.x+it.w});
+      lines.push(out.replace(/\s+/g,' ').trim())})}
+  return lines}
+function parseAgendaLines(lines){const seen=new Map();
+  for(const l of lines){const m=l.match(/제\s*(\d+)\s*(?:-\s*(\d+))?\s*호\s*의\s*안\s*[:：]?\s*(.*)$/);if(!m)continue;
+    let ko=m[3].replace(/^[\s:：\-–·]+/,'').trim();const k=ko.search(/건(?=\s|$|[(),.;])/);if(k>0)ko=ko.slice(0,k+1);
+    const no=m[1]+(m[2]?'-'+m[2]:'');if(ko.length<3||seen.has(no))continue;seen.set(no,ko)}
+  return [...seen].sort((a,b)=>{const x=a[0].split('-').map(Number),y=b[0].split('-').map(Number);return x[0]-y[0]||(x[1]||0)-(y[1]||0)})
+    .map(([no,ko])=>{const t=guessType(ko);return {no,type:t,guess:!!t,res:'',ko,en:''}})}
+async function readAgendaPdf(file){ui.agp={text:'',loading:file.name};render();
+  try{const rows=parseAgendaLines(await pdfLines(file));
+    ui.agp=rows.length?{text:'',rows,src:file.name}:{text:'',msg:`"${file.name}" 에서 의안을 찾지 못했습니다. 스캔한 이미지 PDF이거나 "제1호 의안" 형식이 아닐 수 있습니다. 시트 붙여넣기나 직접 입력을 이용해 주세요.`}}
+  catch(e){ui.agp={text:'',msg:'PDF를 읽지 못했습니다. 파일이 손상됐거나 PDF 읽기 도구를 불러오지 못했습니다.'}}
+  render();document.querySelector('[data-form=agendapaste]')?.scrollIntoView({block:'start'})}
+
+function agendaPaste(){const a=ui.agp||{},rows=a.rows||[],ok=rows.filter(x=>!agpErr(x)).length;
+  return `<form class="card entry" data-form="agendapaste" novalidate><h3>한 번에 등록</h3>
+  <div class="grid2"><label class="f"><span>구글 시트에서 붙여넣기</span><textarea name="text" style="min-height:120px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="열 순서: 의안번호, 의안 종류, 결의방법, 의안명(국문), 의안명(영문)&#10;제목 줄이 있으면 제목으로 열을 찾습니다.">${esc(a.text)}</textarea></label>
+  <div><label class="f"><span>또는 주총소집공고 PDF</span><input type="file" id="agpfile" accept=".pdf,application/pdf"></label>
+  <p class="soft" style="margin:8px 0 0;font-size:12px">소집공고에서 "제1호 의안: …" 줄을 찾아 의안번호와 의안명을 채웁니다. 의안 종류는 의안명으로 추정해 제안하고, 결의방법은 직접 선택합니다. 파일은 저장하지 않고 이 브라우저에서만 읽습니다.</p></div></div>
+  <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="agpsample">시트 예시 넣기</button><button class="btn${a.rows?' sub':''}">붙여넣은 내용 미리보기</button></div>
+  ${a.loading?`<p class="mute" style="margin:16px 0 0">"${esc(a.loading)}" 을 읽는 중입니다…</p>`:''}${a.msg?`<p style="margin:16px 0 0;color:var(--warning)">${esc(a.msg)}</p>`:''}
+  ${a.rows?`${a.src?`<p style="margin:16px 0 0"><span class="badge blue">PDF</span> "${esc(a.src)}" 에서 의안 ${rows.length}건을 찾았습니다. 의안 종류와 의안명을 확인하고 결의방법을 선택해 주세요.</p>`:''}
+  <table style="margin-top:12px"><thead><tr><th style="width:84px">번호</th><th style="width:280px">의안 종류</th><th style="width:140px">결의방법</th><th>의안명 (국문)</th><th style="width:150px">상태</th></tr></thead><tbody>
+  ${rows.map((x,i)=>{const e=agpErr(x);return `<tr><td class="wrap"><input class="mono" data-agp="${i}:no" value="${esc(x.no)}" aria-label="의안번호"></td>
+  <td class="wrap"><select data-agp="${i}:type" aria-label="의안 종류"><option value="">선택</option>${AGENDA_TYPES.map(g=>`<optgroup label="${g[0]}">${opt(g[1],x.type)}</optgroup>`).join('')}</select>${x.rawType?`<div class="soft" style="font-size:12px;margin-top:4px">시트 값: ${esc(x.rawType)}</div>`:x.guess&&x.type?'<div class="soft" style="font-size:12px;margin-top:4px">의안명으로 추정</div>':''}</td>
+  <td class="wrap"><select data-agp="${i}:res" aria-label="결의방법"><option value="">선택</option>${opt(['보통결의','특별결의'],x.res)}</select></td>
+  <td class="wrap"><input data-agp="${i}:ko" value="${esc(x.ko)}" aria-label="의안명">${x.en?`<div class="soft" style="font-size:12px;margin-top:4px">${esc(x.en)}</div>`:''}</td>
+  <td class="wrap">${e?`<span class="badge warn">확인 필요</span>`:'<span class="badge blue">추가</span>'} <button type="button" class="btn sm" data-act="agprm" data-i="${i}">빼기</button>${e?`<div style="color:var(--warning);font-size:12px;margin-top:4px">${e}</div>`:''}</td></tr>`}).join('')}</tbody></table>
+  <p class="soft" style="margin:12px 0 0;font-size:12px">기존 의안 뒤에 추가됩니다. "확인 필요" 줄은 값을 채우면 추가 대상이 되고, 채우지 않으면 빠집니다.</p>
   <div class="actions"><button type="button" class="btn" data-act="agpcancel">취소</button><button type="button" class="btn primary" data-act="agpapply"${dis(ok)}>${ok}건 추가</button></div>`:''}</form>`}
 
 /* ---------- 메인 담당자 ---------- */
@@ -737,7 +793,6 @@ function viewImport(){const imp=ui.imp,sem=imp.kind==='seminar';
       <p class="soft" style="margin:12px 0 0;font-size:12px">값이 다른 칸은 체크한 것만 새 값으로 바뀌고, 체크하지 않으면 기존 값을 유지합니다. 빈칸은 자동으로 채웁니다.</p>
       <div class="actions"><button class="btn" data-act="impcancel">취소</button><button class="btn primary" data-act="impapply"${dis(act.length)}>적용</button></div></div>`}}
   return `<div class="page"><div class="head"><div><h1>가져오기</h1><p class="mute" style="margin:4px 0 0">구글 시트에서 범위를 복사해 붙여넣거나 CSV 파일을 올립니다. 적용 전에 바뀌는 내용을 확인합니다.</p></div></div>
-  <div class="tabs" style="margin-top:0"><a href="#/import" data-act="impkind" data-kind="sheet" class="${sem?'':'on'}">영업·주총 시트</a><a href="#/import" data-act="impkind" data-kind="seminar" class="${sem?'on':''}">세미나 참석</a></div>
   <ol class="steps"><li class="${imp.data?'done':'on'}"><b>1</b>붙여넣기</li><li class="${imp.data?'on':''}"><b>2</b>열 연결 확인</li><li class="${imp.data?'on':''}"><b>3</b>미리보기 후 적용</li></ol>
   <form class="card" data-form="import" novalidate><h3>${sem?'세미나 참석 명단':'고객사 담당자, 주총일·장소'}</h3>
   <textarea name="text" id="imptext" style="min-height:160px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="첫 줄은 열 제목이어야 합니다. 시트에서 제목 줄을 포함해 복사한 뒤 붙여넣으세요.">${esc(imp.text)}</textarea>
@@ -787,6 +842,8 @@ const GLOBAL_FORMS={
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.map!==undefined){const imp=ui.imp,i=+t.dataset.map;if(t.value)imp.map=imp.map.map((v,j)=>j!==i&&v===t.value?'':v);imp.map[i]=t.value;imp.pick={};analyze();render()}
   else if(t.dataset.pick){ui.imp.pick[t.dataset.pick]=t.checked}
+  else if(t.dataset.agp){const [i,k]=t.dataset.agp.split(':'),x=ui.agp.rows[+i];x[k]=t.value;if(k==='type'){x.guess=false;x.rawType=''}if(t.tagName==='SELECT')render()}
+  else if(t.id==='agpfile'&&t.files[0]){readAgendaPdf(t.files[0])}
   else if(t.id==='impfile'&&t.files[0]){t.files[0].text().then(x=>{ui.imp={kind:ui.imp.kind,text:x};render()})}});
 document.addEventListener('input',e=>{if(e.target.id==='imptext')ui.imp.text=e.target.value});
 
