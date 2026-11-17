@@ -214,6 +214,17 @@ tr.off td .badge{color:var(--ink-soft)}
 .ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 table.sched td.wrap{vertical-align:top;padding-top:10px;padding-bottom:10px;white-space:normal}
 table.sched td:first-child{padding-top:18px}
+table.sched .none{display:inline-block;line-height:36px}
+/* 장소: [주주총회와 동일 타일] [읽기 전용 주소 또는 직접 입력] 한 줄 */
+.place{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.place .tile{flex:none}
+.place-ro{flex:1;min-width:180px}
+.ro{display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;border:1px solid var(--hairline);border-radius:10px;background:var(--sunken);color:var(--ink-mute)}
+.ro svg{flex:none;color:var(--ink-soft)}
+.ro span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place-in{flex:1;min-width:260px;display:grid;grid-template-columns:3fr 2fr;gap:8px}
+.edit-link{flex:none;font-size:12px;color:var(--ink-mute);white-space:nowrap}
+.edit-link:hover{color:var(--primary)}
 /* 서비스 이용 항목: 선택 타일 */
 .svc{margin-top:20px;padding-top:20px;border-top:1px solid var(--hairline)}
 .svc-grid{display:grid;grid-template-columns:3fr 1fr;gap:12px}
@@ -345,6 +356,14 @@ table.sched td:first-child{padding-top:18px}
   tr.link:active{background:var(--primary-soft)}
   td .btn.sm{margin-top:4px}
   table.sched td:first-child{padding-top:4px!important}
+  table.sched td:not(:first-child)::before{display:block!important;max-width:none;margin-bottom:4px}
+  table.sched td:has(.none){display:flex;align-items:center}
+  table.sched td:has(.none)::before{margin:0}
+  table.sched .none{line-height:1.5}
+  .place{flex-direction:column;align-items:stretch}
+  .place-ro,.place-in{min-width:0;width:100%}
+  .place-in{grid-template-columns:1fr}
+  .ro{height:44px}
   .entry th{background:none}
   /* 선택 창과 모달: 아래에서 올라오는 시트 */
   .pop{left:0!important;right:0;top:auto!important;bottom:0;min-width:0!important;max-height:80vh;overflow:auto;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));box-shadow:0 0 0 100vmax rgba(21,25,30,.4)}
@@ -437,7 +456,7 @@ const editing=(kind,list)=>ui.edit&&ui.edit.kind===kind?list.find(x=>x.id===ui.e
 /* ---------- 커스텀 컨트롤 (네이티브 셀렉트·달력·시간·파일 대체) ---------- */
 const svg=(cls,d)=>`<svg class="${cls}" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const ICON={chev:svg('chev','<path d="M4 6l4 4 4-4"/>'),cal:svg('ic','<rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/>'),
-  clock:svg('ic','<circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/>'),prev:svg('ic','<path d="M10 4L6 8l4 4"/>'),next:svg('ic','<path d="M6 4l4 4-4 4"/>')};
+  clock:svg('ic','<circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/>'),pin:svg('ic','<path d="M8 14s4.5-4.2 4.5-7.6a4.5 4.5 0 10-9 0C3.5 9.8 8 14 8 14z"/><circle cx="8" cy="6.4" r="1.6"/>'),prev:svg('ic','<path d="M10 4L6 8l4 4"/>'),next:svg('ic','<path d="M6 4l4 4-4 4"/>')};
 let pop=null;
 function closePop(){if(!pop)return;pop.el.remove();pop.trigger.classList.remove('open');pop=null}
 function placePop(){if(!pop)return;const r=pop.trigger.getBoundingClientRect(),el=pop.el;if(pop.fit)el.style.minWidth=r.width+'px';
@@ -640,15 +659,16 @@ basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.ed
   <label class="f"><span>이메일</span><input name="email" type="email" value="${esc(ed.email)}"></label><label class="f"><span>역할</span><input name="role" placeholder="IR, 법무 등" value="${esc(ed.role)}"></label>
   <span class="fix"><button class="btn">${ed.id?'수정 저장':'담당자 추가'}</button>${ed.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div><div class="err"></div></form>`:''}</div>`},
 
-schedule(m){const e=can.editBasic(),s=m.sched,same=s.mock_same!==false,maddr=[m.address,m.addressDetail].filter(Boolean).join(' ');
+schedule(m,cid){const e=can.editBasic(),s=m.sched,same=s.mock_same!==false,maddr=[m.address,m.addressDetail].filter(Boolean).join(' ');
+  const ro=`<div class="ro" title="${esc(maddr)}">${ICON.pin}<span${maddr?'':' class="soft"'}>${maddr?esc(maddr):'주총 장소 미정'}</span></div>`;
   const rowf=(label,d,t,place)=>`<tr><td class="wrap" style="width:150px">${label}</td><td class="wrap" style="width:220px"><input type="date" name="${d}" value="${esc(d==='date'?m.date:s[d])}"${dis(e)}></td>
-    <td class="wrap" style="width:150px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="wrap">${place||'<span class="soft">-</span>'}</td></tr>`;
-  const mockPlace=`<label class="ck"><input type="checkbox" name="mock_same" data-toggle="mockaddr"${same?' checked':''}${dis(e)}>주주총회와 동일</label>
-    <div id="mockaddr-same" class="mute${same?'':' x-hide'}" style="margin-top:6px">${maddr?esc(maddr):'<span class="soft">주총 장소 미정</span>'}</div>
-    <div id="mockaddr" class="grid2${same?' x-hide':''}" style="margin-top:8px;gap:8px"><input name="mock_addr" placeholder="주소" aria-label="사전 모의주총 주소" value="${esc(s.mock_addr)}"${dis(e)}><input name="mock_addr_detail" placeholder="상세주소 (건물명, 층, 회의실)" aria-label="사전 모의주총 상세주소" value="${esc(s.mock_addr_detail)}"${dis(e)}></div>`;
+    <td class="wrap" style="width:150px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft none">일자만 입력</span>'}</td><td class="wrap">${place||'<span class="soft none">-</span>'}</td></tr>`;
+  const mockPlace=`<div class="place"><label class="tile"><input type="checkbox" name="mock_same" data-toggle="mockaddr"${same?' checked':''}${dis(e)}>주주총회와 동일</label>
+    <div id="mockaddr-same" class="place-ro${same?'':' x-hide'}">${ro}</div>
+    <div id="mockaddr" class="place-in${same?' x-hide':''}"><input name="mock_addr" placeholder="주소" aria-label="사전 모의주총 주소" value="${esc(s.mock_addr)}"${dis(e)}><input name="mock_addr_detail" placeholder="상세주소" aria-label="사전 모의주총 상세주소" value="${esc(s.mock_addr_detail)}"${dis(e)}></div></div>`;
   return `<form class="card" data-form="schedule" novalidate><h3>운영 일정</h3><table class="sched"><thead><tr><th>일정</th><th>일자</th><th>시간</th><th>장소</th></tr></thead><tbody>
-  ${rowf('사전점검','pre_d')}${rowf('사전 모의주총','mock_d','mock_t',mockPlace)}${rowf('리허설','reh_d','reh_t')}${rowf('주주총회','date','time',`${maddr?esc(maddr):'<span class="soft">미정</span>'}<div class="soft" style="font-size:12px;margin-top:2px">일시와 장소는 기본정보와 같은 값입니다</div>`)}
-  </tbody></table><p class="soft" style="margin:12px 0 0;font-size:12px">정해지지 않은 일정은 비워 두면 "미정"으로 표시됩니다. 모든 시간은 한국시간입니다.</p>
+  ${rowf('사전점검','pre_d')}${rowf('사전 모의주총','mock_d','mock_t',mockPlace)}${rowf('리허설','reh_d','reh_t')}${rowf('주주총회','date','time',`<div class="place"><div class="place-ro">${ro}</div><a class="edit-link" href="#/c/${cid}/basic">기본정보에서 수정</a></div>`)}
+  </tbody></table><p class="soft" style="margin:12px 0 0;font-size:12px">정해지지 않은 일정은 비워 두면 "미정"으로 표시됩니다. 모든 시간은 한국시간입니다. 사전 모의주총 장소가 주총 장소와 다르면 "주주총회와 동일"을 풀고 주소를 적습니다.</p>
   <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>`},
 
 agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
