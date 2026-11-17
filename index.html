@@ -585,10 +585,10 @@ function listBody(){
   return `<table><thead><tr><th>기업명</th><th>주총일시</th><th>메인 담당자</th>${sc?'<th class="right">계약금액</th><th>계약서</th>':''}${irk?'<th>체크리스트</th><th>세미나</th>':''}</tr></thead><tbody>
   ${rows.map(c=>{const m=db.m[c[0]],ch=m?m.checks:[],dn=ch.filter(x=>x.done).length,ct=m&&m.contract,mc=mainOf(m),sm=db.seminar[c[0]];
     return `<tr class="link" tabindex="0" data-act="open" data-id="${c[0]}"><td>${esc(c[2])} <span class="mono soft" style="font-size:12px;margin-left:4px">${c[1]}</span></td><td>${m?dt(m.date,m.time):tbd}</td>
-    <td>${mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'<span class="soft">—</span>'}</td>
-    ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">—</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">—</span>'}</td>`:''}
-    ${irk?`<td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">—</span>'}</td>`:''}
-    ${irk?`<td>${semBadge(sm)||'<span class="soft">—</span>'}</td>`:''}</tr>`}).join('')}
+    <td>${mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'<span class="soft">-</span>'}</td>
+    ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">-</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">-</span>'}</td>`:''}
+    ${irk?`<td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">-</span>'}</td>`:''}
+    ${irk?`<td>${semBadge(sm)||'<span class="soft">-</span>'}</td>`:''}</tr>`}).join('')}
   </tbody></table>`}
 function viewList(){const n=listRows().length;
   return `<div class="page"><div class="head"><div><h1>기업 목록</h1><p class="mute" style="margin:4px 0 0">${user.org==='irk'?'초기 관리대상 '+COMPANIES.length+'개사':'배정된 기업'} · <span id="cnt">${n}</span>곳 표시</p></div>
@@ -629,8 +629,8 @@ basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.ed
   <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>
   <div class="card"><h3>고객사 담당자 <span class="mute">${cl.length}명</span></h3>
   ${cl.length?`<table><thead><tr><th>담당자명</th><th>부서·직급</th><th>연락처</th><th>이메일</th><th>역할</th>${e?'<th></th>':''}</tr></thead><tbody>
-  ${cl.map(x=>`<tr><td>${esc(x.name)} ${x.primary?'<span class="badge blue">메인</span>':''}${x.planned&&e?' <span class="badge">계정 발급 예정</span>':''}</td><td class="mute">${esc([x.dept,x.title].filter(Boolean).join(' · '))||'<span class="soft">—</span>'}</td>
-  <td class="mono">${esc(x.phone)||'<span class="soft">—</span>'}</td><td>${esc(x.email)||'<span class="soft">—</span>'}</td><td class="mute">${esc(x.role)}</td>
+  ${cl.map(x=>`<tr><td>${esc(x.name)} ${x.primary?'<span class="badge blue">메인</span>':''}${x.planned&&e?' <span class="badge">계정 발급 예정</span>':''}</td><td class="mute">${esc([x.dept,x.title].filter(Boolean).join(' · '))||'<span class="soft">-</span>'}</td>
+  <td class="mono">${esc(x.phone)||'<span class="soft">-</span>'}</td><td>${esc(x.email)||'<span class="soft">-</span>'}</td><td class="mute">${esc(x.role)}</td>
   ${e?`<td class="right" style="white-space:nowrap">${x.primary?'':`<button class="btn sm" data-act="primary" data-id="${x.id}">메인으로 지정</button>`}<button class="btn sm" data-act="edit" data-kind="contact" data-id="${x.id}">수정</button>${delBtns('contact',x.id)}</td>`:''}</tr>`).join('')}</tbody></table>`
   :`<div class="empty">${e?'등록된 담당자가 없습니다.':'지정된 메인 담당자가 없습니다.'}</div>`}
   <p class="soft" style="margin:12px 0 0;font-size:12px">${e?'메인 커뮤니케이션 담당자는 기업당 1명이며 스트리밍코리아에도 표시됩니다. 나머지 담당자는 IR큐더스만 봅니다.':'메인 커뮤니케이션 담당자만 표시됩니다.'}</p>
@@ -642,7 +642,7 @@ basic(m){if(!can.editBasic())return basicReadonly(m);const sv=m.svc||{},e=can.ed
 
 schedule(m){const e=can.editBasic(),s=m.sched,same=s.mock_same!==false,maddr=[m.address,m.addressDetail].filter(Boolean).join(' ');
   const rowf=(label,d,t,place)=>`<tr><td class="wrap" style="width:150px">${label}</td><td class="wrap" style="width:220px"><input type="date" name="${d}" value="${esc(d==='date'?m.date:s[d])}"${dis(e)}></td>
-    <td class="wrap" style="width:150px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="wrap">${place||'<span class="soft">—</span>'}</td></tr>`;
+    <td class="wrap" style="width:150px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="wrap">${place||'<span class="soft">-</span>'}</td></tr>`;
   const mockPlace=`<label class="ck"><input type="checkbox" name="mock_same" data-toggle="mockaddr"${same?' checked':''}${dis(e)}>주주총회와 동일</label>
     <div id="mockaddr-same" class="mute${same?'':' x-hide'}" style="margin-top:6px">${maddr?esc(maddr):'<span class="soft">주총 장소 미정</span>'}</div>
     <div id="mockaddr" class="grid2${same?' x-hide':''}" style="margin-top:8px;gap:8px"><input name="mock_addr" placeholder="주소" aria-label="사전 모의주총 주소" value="${esc(s.mock_addr)}"${dis(e)}><input name="mock_addr_detail" placeholder="상세주소 (건물명, 층, 회의실)" aria-label="사전 모의주총 상세주소" value="${esc(s.mock_addr_detail)}"${dis(e)}></div>`;
@@ -715,7 +715,7 @@ contract(m){const c=m.contract,e=can.editContract(),fin=c.versions.find(v=>v.id=
   ${c.versions.length?`<table><thead><tr><th>버전</th><th>파일</th><th>변경 내용</th><th>고객사 요청 → 반영</th><th>업로드</th><th></th></tr></thead><tbody>
   ${[...c.versions].reverse().map(v=>`<tr><td class="mono" style="white-space:nowrap">v${v.no} ${v.id===c.finalId?'<span class="badge blue">최종본</span>':v===last?'<span class="badge">최신</span>':''}</td>
   <td><a href="#" data-act="download">${esc(v.file)}</a><div class="soft mono" style="font-size:12px">${v.size>=1048576?(v.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(v.size/1024))+' KB'}</div></td>
-  <td class="wrap">${esc(v.note)||'<span class="soft">—</span>'}</td><td class="wrap">${v.creq||v.applied?`${esc(v.creq)||'—'}<div class="mute">→ ${esc(v.applied)||'—'}</div>`:'<span class="soft">—</span>'}</td>
+  <td class="wrap">${esc(v.note)||'<span class="soft">-</span>'}</td><td class="wrap">${v.creq||v.applied?`${esc(v.creq)||'-'}<div class="mute">→ ${esc(v.applied)||'-'}</div>`:'<span class="soft">-</span>'}</td>
   <td class="mute" style="font-size:12px;white-space:nowrap">${esc(v.createdBy)}<br>${stampStr(v.createdAt)}</td>
   <td class="right">${e&&v.id!==c.finalId?`<button class="btn sm" data-act="final" data-id="${v.id}">최종본으로 지정</button>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">업로드된 계약서가 없습니다.</div>'}
   ${e?`<form class="entry" data-form="version" novalidate><h3>새 버전 추가</h3>
@@ -802,7 +802,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
 document.addEventListener('input',e=>{if(e.target.id!=='q')return;ui.q=e.target.value;document.getElementById('list').innerHTML=listBody();labelTables(document.getElementById('list'));document.getElementById('cnt').textContent=listRows().length});
 
 /* ---------- 기본정보 조회 전용 (스트리밍코리아): 입력칸 없이 결과값만 ---------- */
-function basicReadonly(m){const s=m.sched,sv=m.svc||{},dash='<span class="soft">—</span>',addr=[m.address,m.addressDetail].filter(Boolean).join(' '),mc=m.contacts.find(x=>x.primary);
+function basicReadonly(m){const s=m.sched,sv=m.svc||{},dash='<span class="soft">-</span>',addr=[m.address,m.addressDetail].filter(Boolean).join(' '),mc=m.contacts.find(x=>x.primary);
   const row=(k,v)=>`<dt>${k}</dt><dd>${v}</dd>`,place=a=>a?esc(a):tbd,same=s.mock_same!==false;
   const svc=[sv.evote&&'전자투표',sv.eproxy&&'전자위임장',sv.solicit&&'의결권 대리행사 권유'].filter(Boolean);
   const mockAddr=same?addr:[s.mock_addr,s.mock_addr_detail].filter(Boolean).join(' ');
@@ -883,7 +883,7 @@ function agendaPaste(){const a=ui.agp||{},rows=a.rows||[],ok=rows.filter(x=>!agp
 function setPrimary(m,id){m.contacts.forEach(x=>x.primary=x.id===id)}
 
 /* ---------- 가져오기 (구글 시트 붙여넣기·CSV) ---------- */
-const FIELDS=[ // [키, 표시명, 열 제목에서 찾을 단어] — 위에서부터 먼저 맞는 것을 쓴다
+const FIELDS=[ // [키, 표시명, 열 제목에서 찾을 단어] - 위에서부터 먼저 맞는 것을 쓴다
   ['code','종목코드',['종목코드','기업코드','code','코드']],['company','기업명',['기업명','회사명','참석회사','company']],
   ['cname','담당자명',['담당자명','담당자','성함','이름','참석자']],['dept','부서',['부서','소속']],['title','직급',['직급','직책']],
   ['phone','연락처',['연락처','핸드폰','휴대폰','전화']],['email','이메일',['이메일','메일','email']],['role','역할',['역할']],['primary','메인 담당자 여부',['메인']],
@@ -981,13 +981,13 @@ function viewAccounts(){const A=accounts(),st={issued:'<span class="badge blue">
   return `<div class="page"><div class="head"><div><h1>계정 관리</h1><p class="mute" style="margin:4px 0 0">이용자 계정을 일괄 등록하고 발급 상태를 관리합니다. 공개 회원가입은 없습니다.</p></div><button class="btn primary" data-act="acctopen">계정 일괄 등록</button></div>
   <div class="card"><h3>이용자 계정 <span class="mute">IR큐더스·스트리밍코리아 ${A.length}명</span></h3>
   <table><thead><tr><th>이름</th><th>소속</th><th>역할</th><th>로그인 ID</th><th>상태</th><th>발급일</th><th class="right">사용 여부</th></tr></thead><tbody>
-  ${A.map(a=>`<tr class="${a.status==='inactive'?'off':''}"><td>${esc(a.name)}</td><td>${ORG[a.org]}</td><td class="mute">${ROLE[a.role]||'<span class="soft">—</span>'}</td><td class="mono">${esc(a.loginId)}</td><td>${st[a.status]}</td><td class="soft" style="font-size:12px">${a.issuedAt?stampStr(a.issuedAt):'—'}</td>
+  ${A.map(a=>`<tr class="${a.status==='inactive'?'off':''}"><td>${esc(a.name)}</td><td>${ORG[a.org]}</td><td class="mute">${ROLE[a.role]||'<span class="soft">-</span>'}</td><td class="mono">${esc(a.loginId)}</td><td>${st[a.status]}</td><td class="soft" style="font-size:12px">${a.issuedAt?stampStr(a.issuedAt):'-'}</td>
   <td class="right">${a.status==='pending'?`<button class="btn sm line" data-act="acct" data-id="${a.id}" data-to="issued">발급 처리</button>`
     :`<button class="sw" role="switch" aria-checked="${a.status==='issued'}" aria-label="${esc(a.name)} 계정 사용" data-act="acct" data-id="${a.id}" data-to="${a.status==='issued'?'inactive':'issued'}"><span style="text-align:right">${a.status==='issued'?'활성':'비활성'}</span><i></i></button>`}</td></tr>`).join('')}</tbody></table>
   <p class="soft" style="margin:12px 0 0;font-size:12px">미발급 계정은 정보를 전달한 뒤 "발급 처리"를 누릅니다. 발급된 계정은 스위치로 사용을 끄고 켭니다. 꺼진 계정은 로그인할 수 없습니다.</p></div>
   <div class="card"><h3>고객사 담당자 계정 <span class="mute">발급 예정 ${cs.filter(v=>v.x.planned).length}명 / 전체 ${cs.length}명</span></h3>
   ${cs.length?`<table><thead><tr><th>기업</th><th>담당자</th><th>부서·직급</th><th>이메일</th><th>발급 예정</th></tr></thead><tbody>
-  ${cs.map(({c,x})=>`<tr><td>${esc(c[2])}</td><td>${esc(x.name)} ${x.primary?'<span class="badge blue">메인</span>':''}</td><td class="mute">${esc([x.dept,x.title].filter(Boolean).join(' · '))}</td><td>${esc(x.email)||'<span class="soft">—</span>'}</td>
+  ${cs.map(({c,x})=>`<tr><td>${esc(c[2])}</td><td>${esc(x.name)} ${x.primary?'<span class="badge blue">메인</span>':''}</td><td class="mute">${esc([x.dept,x.title].filter(Boolean).join(' · '))}</td><td>${esc(x.email)||'<span class="soft">-</span>'}</td>
   <td><input type="checkbox" data-act="plan" data-cid="${c[0]}" data-id="${x.id}"${x.planned?' checked':''}></td></tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 고객사 담당자가 없습니다. 가져오기에서 영업 시트를 올리면 여기에 나타납니다.</div>'}
   <p class="soft" style="margin:12px 0 0;font-size:12px">고객사 로그인은 2차 범위입니다. 지금은 발급할 대상만 표시해 둡니다.</p></div>${ui.acctOpen?acctModal():''}</div>`}
 function acctModal(){return `<div class="modal-bg"><form class="modal wide" data-form="acctadd" novalidate role="dialog" aria-modal="true" aria-labelledby="am-t">
