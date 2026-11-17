@@ -13,7 +13,7 @@
   --ink:#15191E; --ink-mute:#60646C; --ink-soft:#8B8D98; --ink-disabled:#B9BBC6;
   --canvas:#FCFCFD; --sunken:#F5F6F8;
   --hairline:rgba(66,87,138,.15); --hairline-strong:rgba(21,25,30,.3);
-  --warning:#E8590C; --critical:#D92D20;
+  --warning:#E8590C; --critical:#D92D20; --tray:#EEF1F5;
   --font:"Pretendard Variable",Pretendard,Inter,-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
   --mono:"Space Mono",ui-monospace,Menlo,Consolas,monospace;
   --sh-float:0 12px 20px -14px rgba(16,24,40,.09),0 4px 12px 2px rgba(16,24,40,.1),0 2px 4px -4px rgba(16,24,40,.14);
@@ -161,6 +161,52 @@ td .btn+.btn{margin-left:4px}
 .stat div b{display:block;font:400 20px var(--mono);letter-spacing:0}
 .stat div span{font-size:12px;color:var(--ink-mute)}
 .maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+/* 입력 영역: 카드 아래에 붙는 회색 트레이. 정보(흰 카드)와 입력을 구분한다 */
+.entry{background:var(--tray)}
+.card>.entry{margin:24px -24px -24px;padding:20px 24px 24px;border-top:1px solid var(--hairline);border-radius:0 0 11px 11px}
+.card+.card.entry{margin-top:0;border-top:0;border-radius:0 0 12px 12px;padding-top:20px}
+.card:has(+.card.entry){border-bottom-left-radius:0;border-bottom-right-radius:0}
+.entry h3{font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.entry h3::before{content:"+";flex:none;width:18px;height:18px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-content:center;font:500 14px/1 var(--font)}
+.entry.editing{box-shadow:inset 3px 0 0 var(--primary)}
+.entry button.btn:not([type=button]):not(.primary):not(.sub){background:var(--primary);border-color:var(--primary);color:var(--canvas)}
+.entry button.btn:not([type=button]):not(.primary):not(.sub):hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.entry.editing h3::before{content:"✎";font-size:11px}
+/* 카드 제목 */
+.card>h3,.card>.head h3{font-size:16px}
+.card h3 .mute{font-size:14px;margin-left:4px}
+/* 스위치 */
+.sw{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:4px 6px;border-radius:9999px;font:400 12px/1.5 var(--font);letter-spacing:-.02em;color:var(--ink-soft);cursor:pointer}
+.sw i{position:relative;width:36px;height:20px;border-radius:9999px;background:var(--ink-disabled);transition:background-color .15s ease-out}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--canvas);box-shadow:0 1px 2px rgba(16,24,40,.25);transition:transform .15s ease-out}
+.sw span{min-width:36px;text-align:left}
+.sw[aria-checked=true]{color:var(--ink)}
+.sw[aria-checked=true] i{background:var(--primary)}
+.sw[aria-checked=true] i::after{transform:translateX(16px)}
+tr.off td{color:var(--ink-soft)}
+tr.off td .badge{color:var(--ink-soft)}
+.btn.line{border-color:var(--primary);color:var(--primary)}
+.btn.line:hover{background:var(--primary-soft);border-color:var(--primary)}
+/* 모달 폼 */
+.modal.wide{width:640px}
+.modal .fmt{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:16px 0 8px;border:1px solid var(--hairline);border-radius:10px;overflow:hidden;background:var(--hairline)}
+.modal .fmt span{background:var(--sunken);padding:6px 10px;font-size:12px;font-weight:500;color:var(--ink-mute)}
+.modal .fmt em{background:var(--canvas);padding:6px 10px;font:400 12px var(--mono);letter-spacing:0;color:var(--ink-mute)}
+/* 탭 건수, 단계 표시 */
+.tabs a .n{margin-left:6px;font:400 12px var(--mono);letter-spacing:0;color:var(--ink-soft)}
+.steps{display:flex;gap:8px;align-items:center;list-style:none;margin:0 0 16px;padding:0;font-size:12px;color:var(--ink-soft)}
+.steps li{display:flex;align-items:center;gap:8px}
+.steps li b{width:20px;height:20px;border-radius:50%;border:1px solid var(--hairline-strong);display:grid;place-content:center;font:400 11px var(--mono);letter-spacing:0}
+.steps li.on{color:var(--ink)} .steps li.on b{background:var(--primary);border-color:var(--primary);color:var(--canvas)}
+.steps li.done b{border-color:var(--primary);color:var(--primary)}
+.steps li+li::before{content:"";width:24px;height:1px;background:var(--hairline-strong)}
+/* 검색, 목록 머리글 고정 */
+#q{padding-left:34px;background:var(--canvas) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%2360646C' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5L14 14'/%3E%3C/svg%3E") 10px center no-repeat}
+#list thead th{position:sticky;top:60px;z-index:1}
+/* 키보드 포커스, 전환 */
+.btn:focus-visible,a:focus-visible,.sw:focus-visible,.ctl-ic:focus-visible,tr.link:focus-visible,.acct:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn,input,select,textarea,.ctl,td,.tabs a,.nav a{transition:border-color .15s ease-out,background-color .15s ease-out,color .15s ease-out}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 /* 기타 */
 .demo{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:6px 24px;font-size:12px;color:var(--ink-mute);display:flex;gap:8px;align-items:center}
 .login{min-height:100vh;display:grid;place-items:center;padding:48px 24px}
@@ -335,7 +381,8 @@ function enhance(){
 document.addEventListener('mousedown',e=>{if(pop&&!pop.el.contains(e.target)&&!pop.trigger.contains(e.target))closePop()});
 addEventListener('scroll',e=>{if(pop&&!(e.target instanceof Node&&pop.el.contains(e.target)))closePop()},true);
 addEventListener('resize',closePop);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.modal-bg')){document.querySelector('.modal-bg').remove();return}if(!pop)return;
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.target.matches('tr.link')){e.target.click();return}
+  if(e.key==='Escape'&&document.querySelector('.modal-bg')){if(ui.acctOpen){if(isDirty())return;ui.acctOpen=false;render()}else document.querySelector('.modal-bg').remove();return}if(!pop)return;
   if(e.key==='Escape'){const t=pop.trigger;closePop();t.focus();return}
   const opts=[...pop.el.querySelectorAll('[role=listbox] .opt')];if(!opts.length)return;
   let i=opts.findIndex(o=>o.classList.contains('act'));
@@ -354,7 +401,7 @@ function askLeave(go){closePop();document.querySelector('.modal-bg')?.remove();c
   bg.onclick=e=>{const b=e.target.closest('[data-leave]');if(!b&&e.target!==bg)return;bg.remove();if(b&&b.dataset.leave==='go'){clearDirty();go()}}}
 addEventListener('hashchange',()=>{
   if(isDirty()){const to=location.hash;history.replaceState(null,'',curHash||'#/');askLeave(()=>{location.hash=to});return}
-  curHash=location.hash;ui.edit=null;ui.confirm=null;ui.agp=null;render();scrollTo(0,0)});
+  curHash=location.hash;ui.edit=null;ui.confirm=null;ui.agp=null;ui.acctOpen=false;render();scrollTo(0,0)});
 addEventListener('beforeunload',e=>{if(isDirty()){e.preventDefault();e.returnValue=''}});
 document.addEventListener('input',e=>{const f=e.target.closest&&e.target.closest('form[data-form]');if(f&&!['login','import'].includes(f.dataset.form))f.classList.add('dirty')});
 document.addEventListener('change',e=>{const f=e.target.closest&&e.target.closest('form[data-form]');if(f&&!['login','import'].includes(f.dataset.form)&&e.target.dataset.map===undefined)f.classList.add('dirty')});
@@ -395,7 +442,7 @@ function listBody(){
   if(!rows.length)return `<div class="empty">검색결과가 없습니다.</div>`;
   return `<table><thead><tr><th>기업명</th><th>주총일시</th><th>메인 담당자</th>${sc?'<th class="right">계약금액</th><th>계약서</th>':''}<th>체크리스트</th>${irk?'<th>세미나</th>':''}</tr></thead><tbody>
   ${rows.map(c=>{const m=db.m[c[0]],ch=m?m.checks:[],dn=ch.filter(x=>x.done).length,ct=m&&m.contract,mc=mainOf(m),sm=db.seminar[c[0]];
-    return `<tr class="link" data-act="open" data-id="${c[0]}"><td>${esc(c[2])} <span class="mono soft" style="font-size:12px;margin-left:4px">${c[1]}</span></td><td>${m?dt(m.date,m.time):tbd}</td>
+    return `<tr class="link" tabindex="0" data-act="open" data-id="${c[0]}"><td>${esc(c[2])} <span class="mono soft" style="font-size:12px;margin-left:4px">${c[1]}</span></td><td>${m?dt(m.date,m.time):tbd}</td>
     <td>${mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'<span class="soft">—</span>'}</td>
     ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">—</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">—</span>'}</td>`:''}
     <td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">—</span>'}</td>
@@ -410,10 +457,11 @@ function viewList(){const n=listRows().length;
 function viewDetail(r){
   const c=co(r.cid),m=mt(r.cid),tabs=TABS.filter(t=>t[0]!=='contract'||can.seeContract());
   const tab=tabs.find(t=>t[0]===r.tab)?r.tab:'basic';
+  const tn={agenda:m.agendas.length,estimate:m.items.length,check:m.checks.length?m.checks.filter(x=>x.done).length+'/'+m.checks.length:0,req:m.reqs.filter(can.seeReq).length,contract:m.contract.versions.length};
   return `<div class="page"><a href="#/" class="mute">← 기업 목록</a>
   <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0"><span class="mono">${c[1]}</span> · ${c[3]} · ${esc(m.title)}${can.irk()&&db.seminar[r.cid]?` <span class="badge blue" style="margin-left:4px">세미나 참석 ${db.seminar[r.cid].count}명</span>`:''}</p></div>
   <div class="right"><div class="cap">주총일시</div><div style="font-size:16px">${dt(m.date,m.time)}</div></div></div>
-  <div class="tabs">${tabs.map(t=>`<a href="#/c/${r.cid}/${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</a>`).join('')}</div>
+  <div class="tabs">${tabs.map(t=>`<a href="#/c/${r.cid}/${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}${tn[t[0]]?`<span class="n">${tn[t[0]]}</span>`:''}</a>`).join('')}</div>
   ${PANELS[tab](m,r.cid)}</div>`}
 
 const PANELS={
@@ -433,7 +481,7 @@ basic(m){const e=can.editBasic(),ed=editing('contact',m.contacts)||{},cl=e?m.con
   ${e?`<td class="right" style="white-space:nowrap">${x.primary?'':`<button class="btn sm" data-act="primary" data-id="${x.id}">메인으로 지정</button>`}<button class="btn sm" data-act="edit" data-kind="contact" data-id="${x.id}">수정</button>${delBtns('contact',x.id)}</td>`:''}</tr>`).join('')}</tbody></table>`
   :`<div class="empty">${e?'등록된 담당자가 없습니다.':'지정된 메인 담당자가 없습니다.'}</div>`}
   <p class="soft" style="margin:12px 0 0;font-size:12px">${e?'메인 커뮤니케이션 담당자는 기업당 1명이며 스트리밍코리아에도 표시됩니다. 나머지 담당자는 IR큐더스만 봅니다.':'메인 커뮤니케이션 담당자만 표시됩니다.'}</p>
-  ${e?`<form data-form="contact" novalidate style="margin-top:16px"><div class="row">
+  ${e?`<form class="entry${ed.id?' editing':''}" data-form="contact" novalidate><h3>${ed.id?'담당자 수정':'담당자 추가'}</h3><div class="row">
   <label class="f"><span>담당자명 *</span><input name="name" value="${esc(ed.name)}"></label><label class="f"><span>부서</span><input name="dept" value="${esc(ed.dept)}"></label>
   <label class="f"><span>직급</span><input name="title" value="${esc(ed.title)}"></label><label class="f"><span>연락처</span><input name="phone" placeholder="010-0000-0000" value="${esc(ed.phone)}"></label>
   <label class="f"><span>이메일</span><input name="email" type="email" value="${esc(ed.email)}"></label><label class="f"><span>역할</span><input name="role" placeholder="IR, 법무 등" value="${esc(ed.role)}"></label>
@@ -452,7 +500,7 @@ agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
   ${m.agendas.length?`<table><thead><tr><th>번호</th><th>의안 종류</th><th>결의방법</th><th>의안명</th>${e?'<th></th>':''}</tr></thead><tbody>
   ${m.agendas.map(a=>`<tr><td class="mono">${esc(a.no)}</td><td>${esc(a.type)}</td><td><span class="badge">${esc(a.res)}</span></td><td class="wrap">${esc(a.ko)}${a.en?`<div class="soft" style="font-size:12px">${esc(a.en)}</div>`:''}</td>
   ${e?`<td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="agenda" data-id="${a.id}">수정</button>${delBtns('agenda',a.id)}</td>`:''}</tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 의안이 없습니다.</div>'}</div>
-  ${e?`<form class="card" data-form="agenda" novalidate><h3>${ed.id?'의안 수정':'의안 추가'}</h3><div class="row">
+  ${e?`<form class="card entry${ed.id?' editing':''}" data-form="agenda" novalidate><h3>${ed.id?'의안 수정':'의안 추가'}</h3><div class="row">
   <label class="f fix" style="width:96px"><span>의안번호</span><input name="no" placeholder="1, 2-1" value="${esc(ed.no)}"></label>
   <label class="f"><span>의안 종류 *</span><select name="type"><option value="">선택</option>${AGENDA_TYPES.map(g=>`<optgroup label="${g[0]}">${opt(g[1],ed.type)}</optgroup>`).join('')}</select></label>
   <label class="f fix" style="width:140px"><span>결의방법 *</span><select name="res"><option value="">선택</option>${opt(['보통결의','특별결의'],ed.res)}</select></label></div>
@@ -466,7 +514,7 @@ estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x
   ${m.items.map(x=>`<tr><td><span class="badge">${esc(x.kind)}</span></td><td>${esc(x.name)}</td><td class="mute">${esc(x.unit)}</td><td class="right mono">${won(x.qty)}</td><td class="right mono">${won(x.price)}</td><td class="right mono">${won(x.qty*x.price)}</td>
   <td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="item" data-id="${x.id}">수정</button>${delBtns('item',x.id)}</td></tr>`).join('')}</tbody></table>
   <div class="total"><span class="mute">합계 (부가세 제외 공급가액) · 수량 × 단가의 합</span><b>${won(total)}원</b></div>`:'<div class="empty">등록된 견적 항목이 없습니다.</div>'}
-  <form data-form="item" novalidate style="margin-top:16px"><div class="row">
+  <form class="entry${ed.id?' editing':''}" data-form="item" novalidate><h3>${ed.id?'견적 항목 수정':'견적 항목 추가'}</h3><div class="row">
   <label class="f fix" style="width:100px"><span>구분 *</span><select name="kind">${opt(['장비','서비스'],ed.kind)}</select></label>
   <label class="f" style="flex:2"><span>장비·서비스명 *</span><input name="name" value="${esc(ed.name)}"></label>
   <label class="f fix" style="width:80px"><span>단위</span><input name="unit" placeholder="대, 명, 식" value="${esc(ed.unit)}"></label>
@@ -476,7 +524,7 @@ estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x
   <div class="card"><h3>견적 메모 <span class="mute">${m.memos.length}건</span></h3>
   ${m.memos.map(x=>`<div class="note"><span class="badge">요청 ${ORG[x.org]}${x.rname?' · '+esc(x.rname):''}</span><p>${esc(x.body)}</p>
   <div class="row"><span class="meta">${meta(x)}</span><span class="fix"><button class="btn sm" data-act="edit" data-kind="memo" data-id="${x.id}">수정</button></span></div></div>`).join('')||'<div class="empty">등록된 메모가 없습니다.</div>'}
-  <form data-form="memo" novalidate style="margin-top:16px"><div class="row"><label class="f fix" style="width:160px"><span>요청자 구분 *</span><select name="org">${orgOpts(em.org||'customer')}</select></label>
+  <form class="entry${em.id?' editing':''}" data-form="memo" novalidate><h3>${em.id?'메모 수정':'메모 등록'}</h3><div class="row"><label class="f fix" style="width:160px"><span>요청자 구분 *</span><select name="org">${orgOpts(em.org||'customer')}</select></label>
   <label class="f fix" style="width:160px"><span>요청자명</span><input name="rname" value="${esc(em.rname)}"></label><label class="f"><span>메모 내용 *</span><input name="body" value="${esc(em.body)}"></label>
   <span class="fix"><button class="btn">${em.id?'수정 저장':'메모 등록'}</button>${em.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div>
   <p class="soft" style="margin:8px 0 0;font-size:12px">작성자와 작성일시는 로그인한 계정으로 자동 기록됩니다. 요청자와 작성자는 다를 수 있습니다.</p><div class="err"></div></form></div>`},
@@ -485,14 +533,14 @@ check(m){const mg=can.manageChecks(),dn=m.checks.filter(x=>x.done).length;
   return `<div class="card"><div class="head"><h3>체크리스트</h3>${m.checks.length?`<div class="prog" style="width:200px"><div class="bar" style="flex:1"><i style="width:${dn/m.checks.length*100}%"></i></div><span class="mono mute">${dn}/${m.checks.length}</span></div>`:''}</div>
   ${m.checks.map(x=>`<div class="chk${x.done?' on':''}"><input type="checkbox" data-act="toggle" data-id="${x.id}"${x.done?' checked':''}><span class="t">${esc(x.title)}</span>
   ${x.done?`<span class="done" style="font-size:12px">${esc(x.doneBy)} · ${stampStr(x.doneAt)}</span>`:''}${mg?delBtns('check',x.id):''}</div>`).join('')||'<div class="empty">등록된 항목이 없습니다. 공통 항목은 후속 회의에서 정합니다.</div>'}
-  ${mg?`<form data-form="check" novalidate style="margin-top:16px"><div class="row"><input name="title" placeholder="체크 항목 입력"><span class="fix"><button class="btn primary">항목 추가</button></span></div><div class="err"></div></form>`
+  ${mg?`<form class="entry" data-form="check" novalidate><h3>항목 추가</h3><div class="row"><input name="title" placeholder="체크 항목 입력"><span class="fix"><button class="btn primary">항목 추가</button></span></div><div class="err"></div></form>`
       :'<p class="soft" style="margin:16px 0 0;font-size:12px">항목 추가·삭제는 IR큐더스 담당자만 할 수 있습니다. 완료 체크는 가능합니다.</p>'}</div>`},
 
 req(m){const list=m.reqs.filter(can.seeReq),ed=editing('req',m.reqs)||{},irk=user.org==='irk';
   return `<div class="card"><h3>고객사 요구사항 <span class="mute">${list.length}건</span></h3>
   ${list.map(x=>`<div class="note"><span class="badge">요청 ${ORG[x.org]}${x.rname?' · '+esc(x.rname):''}</span> <span class="badge${x.vis==='shared'?' blue':''}">${x.vis==='shared'?'공동 공개':'내부'}</span><p>${esc(x.body)}</p>
   <div class="row"><span class="meta">${meta(x)}</span>${can.editReq(x)?`<span class="fix"><button class="btn sm" data-act="edit" data-kind="req" data-id="${x.id}">수정</button>${irk?delBtns('req',x.id):''}</span>`:''}</div></div>`).join('')||'<div class="empty">등록된 요구사항이 없습니다.</div>'}</div>
-  <form class="card" data-form="req" novalidate><h3>${ed.id?'요구사항 수정':'요구사항 등록'}</h3><div class="row">
+  <form class="card entry${ed.id?' editing':''}" data-form="req" novalidate><h3>${ed.id?'요구사항 수정':'요구사항 등록'}</h3><div class="row">
   <label class="f fix" style="width:160px"><span>요청자 구분 *</span><select name="org">${orgOpts(ed.org||'customer')}</select></label>
   <label class="f fix" style="width:160px"><span>요청자명</span><input name="rname" value="${esc(ed.rname)}"></label>
   <label class="f fix" style="width:240px"><span>공유범위</span><select name="vis"${dis(irk)}>${opt(irk?[['internal','내부 (IR큐더스만)'],['shared','공동 (스트리밍코리아 포함)']]:[['shared','공동 (스트리밍코리아 포함)']],ed.vis||(irk?'internal':'shared'))}</select></label></div>
@@ -514,7 +562,7 @@ contract(m){const c=m.contract,e=can.editContract(),fin=c.versions.find(v=>v.id=
   <td class="wrap">${esc(v.note)||'<span class="soft">—</span>'}</td><td class="wrap">${v.creq||v.applied?`${esc(v.creq)||'—'}<div class="mute">→ ${esc(v.applied)||'—'}</div>`:'<span class="soft">—</span>'}</td>
   <td class="mute" style="font-size:12px;white-space:nowrap">${esc(v.createdBy)}<br>${stampStr(v.createdAt)}</td>
   <td class="right">${e&&v.id!==c.finalId?`<button class="btn sm" data-act="final" data-id="${v.id}">최종본으로 지정</button>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">업로드된 계약서가 없습니다.</div>'}
-  ${e?`<form data-form="version" novalidate style="margin-top:16px;border-top:1px solid var(--hairline);padding-top:16px"><h3 style="margin-bottom:12px">새 버전 추가</h3>
+  ${e?`<form class="entry" data-form="version" novalidate><h3>새 버전 추가</h3>
   <div class="grid2"><label class="f"><span>계약서 파일 * (PDF·DOCX, 50MB 이하)</span><input type="file" name="file" accept=".pdf,.docx"></label>
   <label class="f"><span>변경 내용</span><input name="note" placeholder="이 버전에서 수정한 조항"></label>
   <label class="f"><span>고객사 요청 내용</span><input name="creq"></label><label class="f"><span>실제 반영 사항</span><input name="applied"></label></div>
@@ -587,15 +635,17 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   else if(a==='agpapply'){const ok=ui.agp.rows.filter(x=>!x.err);ok.forEach(x=>m.agendas.push(stamp({id:nid(),no:x.no,type:x.type,res:x.res,ko:x.ko,en:x.en},true)));ui.agp=null;commit(`의안 ${ok.length}건을 추가했습니다`)}
   else if(a==='agpcancel'){ui.agp=null;render()}
   else if(a==='agpsample'){ui.agp={text:'의안번호\t의안 종류\t결의방법\t의안명(국문)\t의안명(영문)\n1\t재무제표 승인\t보통결의\t제58기 재무제표 승인의 건\tApproval of Financial Statements\n2\t정관 변경\t특별결의\t정관 일부 변경의 건\t\n3-1\t이사선임\t보통\t사내이사 홍길동 선임의 건\t\n3-2\t이사 선임\t보통결의\t사외이사 김영희 선임의 건\t\n4\t주식매수선택권 부여\t특별결의\t주식매수선택권 부여의 건\t',rows:null};render()}
+  else if(a==='acctopen'){ui.acctOpen=true;render();document.getElementById('acct-text')?.focus()}
+  else if(a==='acctclose'){clearDirty();ui.acctOpen=false;render()}
   else if(a==='reset'){if(ui.confirm==='reset'){db=fresh();commit('입력 내용을 초기화했습니다')}else{ui.confirm='reset';el.textContent='한 번 더 누르면 초기화';el.classList.add('danger')}}
 });
 document.addEventListener('input',e=>{if(e.target.id!=='q')return;ui.q=e.target.value;document.getElementById('list').innerHTML=listBody();document.getElementById('cnt').textContent=listRows().length});
 
 /* ---------- 의안 붙여넣기 ---------- */
 function agendaPaste(){const a=ui.agp||{},ok=(a.rows||[]).filter(x=>!x.err).length;
-  return `<form class="card" data-form="agendapaste" novalidate><h3>시트에서 붙여넣어 한 번에 등록</h3>
+  return `<form class="card entry" data-form="agendapaste" novalidate><h3>시트에서 붙여넣어 한 번에 등록</h3>
   <textarea name="text" style="min-height:120px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="구글 시트에서 의안 목록을 복사해 붙여넣으세요.&#10;열 순서: 의안번호, 의안 종류, 결의방법, 의안명(국문), 의안명(영문). 제목 줄이 있으면 제목으로 열을 찾습니다.">${esc(a.text)}</textarea>
-  <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="agpsample">예시 넣기</button><button class="btn">미리보기</button></div>
+  <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="agpsample">예시 넣기</button><button class="btn${a.rows?' sub':''}">미리보기</button></div>
   ${a.rows?`<table style="margin-top:16px"><thead><tr><th>번호</th><th>의안 종류</th><th>결의방법</th><th>의안명</th><th>상태</th></tr></thead><tbody>
   ${a.rows.map(x=>`<tr><td class="mono">${esc(x.no)}</td><td>${esc(x.type)}</td><td>${esc(x.res)}</td><td class="wrap">${esc(x.ko)}${x.en?`<div class="soft" style="font-size:12px">${esc(x.en)}</div>`:''}</td>
   <td>${x.err?`<span class="badge warn">제외</span> <span style="color:var(--warning);font-size:12px">${x.err}</span>`:'<span class="badge blue">추가</span>'}</td></tr>`).join('')}</tbody></table>
@@ -688,6 +738,7 @@ function viewImport(){const imp=ui.imp,sem=imp.kind==='seminar';
       <div class="actions"><button class="btn" data-act="impcancel">취소</button><button class="btn primary" data-act="impapply"${dis(act.length)}>적용</button></div></div>`}}
   return `<div class="page"><div class="head"><div><h1>가져오기</h1><p class="mute" style="margin:4px 0 0">구글 시트에서 범위를 복사해 붙여넣거나 CSV 파일을 올립니다. 적용 전에 바뀌는 내용을 확인합니다.</p></div></div>
   <div class="tabs" style="margin-top:0"><a href="#/import" data-act="impkind" data-kind="sheet" class="${sem?'':'on'}">영업·주총 시트</a><a href="#/import" data-act="impkind" data-kind="seminar" class="${sem?'on':''}">세미나 참석</a></div>
+  <ol class="steps"><li class="${imp.data?'done':'on'}"><b>1</b>붙여넣기</li><li class="${imp.data?'on':''}"><b>2</b>열 연결 확인</li><li class="${imp.data?'on':''}"><b>3</b>미리보기 후 적용</li></ol>
   <form class="card" data-form="import" novalidate><h3>${sem?'세미나 참석 명단':'고객사 담당자, 주총일·장소'}</h3>
   <textarea name="text" id="imptext" style="min-height:160px;font-family:var(--mono);letter-spacing:0;font-size:12px;white-space:pre" placeholder="첫 줄은 열 제목이어야 합니다. 시트에서 제목 줄을 포함해 복사한 뒤 붙여넣으세요.">${esc(imp.text)}</textarea>
   <div class="row" style="margin-top:12px"><label class="f"><span>또는 CSV 파일</span><input type="file" id="impfile" accept=".csv,.tsv,.txt"></label>
@@ -701,20 +752,24 @@ function viewImport(){const imp=ui.imp,sem=imp.kind==='seminar';
 function accounts(){if(!db.accounts)db.accounts=USERS.map(u=>({id:nid(),name:u.name,org:u.org,role:u.role||'',loginId:u.loginId,status:'issued',issuedAt:new Date().toISOString()}));return db.accounts}
 function viewAccounts(){const A=accounts(),st={issued:'<span class="badge blue">발급됨</span>',pending:'<span class="badge warn">미발급</span>',inactive:'<span class="badge">비활성</span>'};
   const cs=[];Object.keys(db.m).forEach(cid=>{const c=co(cid);if(c)db.m[cid].contacts.forEach(x=>cs.push({c,x}))});
-  return `<div class="page"><div class="head"><div><h1>계정 관리</h1><p class="mute" style="margin:4px 0 0">이용자 계정을 일괄 등록하고 발급 상태를 관리합니다. 공개 회원가입은 없습니다.</p></div></div>
+  return `<div class="page"><div class="head"><div><h1>계정 관리</h1><p class="mute" style="margin:4px 0 0">이용자 계정을 일괄 등록하고 발급 상태를 관리합니다. 공개 회원가입은 없습니다.</p></div><button class="btn primary" data-act="acctopen">계정 일괄 등록</button></div>
   <div class="card"><h3>이용자 계정 <span class="mute">IR큐더스·스트리밍코리아 ${A.length}명</span></h3>
-  <table><thead><tr><th>이름</th><th>소속</th><th>역할</th><th>로그인 ID</th><th>상태</th><th>발급일</th><th></th></tr></thead><tbody>
-  ${A.map(a=>`<tr><td>${esc(a.name)}</td><td>${ORG[a.org]}</td><td class="mute">${ROLE[a.role]||'<span class="soft">—</span>'}</td><td class="mono">${esc(a.loginId)}</td><td>${st[a.status]}</td><td class="soft" style="font-size:12px">${a.issuedAt?stampStr(a.issuedAt):'—'}</td>
-  <td class="right">${a.status==='pending'?`<button class="btn sm" data-act="acct" data-id="${a.id}" data-to="issued">발급 처리</button>`:a.status==='issued'?`<button class="btn sm" data-act="acct" data-id="${a.id}" data-to="inactive">비활성</button>`:`<button class="btn sm" data-act="acct" data-id="${a.id}" data-to="issued">다시 활성</button>`}</td></tr>`).join('')}</tbody></table>
-  <form data-form="acctadd" novalidate style="margin-top:16px;border-top:1px solid var(--hairline);padding-top:16px"><h3 style="margin-bottom:12px">일괄 등록</h3>
-  <textarea name="text" style="font-family:var(--mono);letter-spacing:0;font-size:12px" placeholder="한 줄에 한 명씩: 이름, 소속, 역할, 로그인 ID&#10;홍운영, IR큐더스, 운영, irk-ops2&#10;강송출, 스트리밍코리아, , sk-02"></textarea>
-  <p class="soft" style="margin:8px 0 0;font-size:12px">등록하면 "미발급" 상태로 들어갑니다. 계정 정보를 전달한 뒤 "발급 처리"를 누릅니다. 전달 경로와 비밀번호 초기화 방식은 담당자 검토에서 정합니다.</p>
-  <div class="err"></div><div class="actions"><button class="btn primary">일괄 등록</button></div></form></div>
+  <table><thead><tr><th>이름</th><th>소속</th><th>역할</th><th>로그인 ID</th><th>상태</th><th>발급일</th><th class="right">사용 여부</th></tr></thead><tbody>
+  ${A.map(a=>`<tr class="${a.status==='inactive'?'off':''}"><td>${esc(a.name)}</td><td>${ORG[a.org]}</td><td class="mute">${ROLE[a.role]||'<span class="soft">—</span>'}</td><td class="mono">${esc(a.loginId)}</td><td>${st[a.status]}</td><td class="soft" style="font-size:12px">${a.issuedAt?stampStr(a.issuedAt):'—'}</td>
+  <td class="right">${a.status==='pending'?`<button class="btn sm line" data-act="acct" data-id="${a.id}" data-to="issued">발급 처리</button>`
+    :`<button class="sw" role="switch" aria-checked="${a.status==='issued'}" aria-label="${esc(a.name)} 계정 사용" data-act="acct" data-id="${a.id}" data-to="${a.status==='issued'?'inactive':'issued'}"><span style="text-align:right">${a.status==='issued'?'활성':'비활성'}</span><i></i></button>`}</td></tr>`).join('')}</tbody></table>
+  <p class="soft" style="margin:12px 0 0;font-size:12px">미발급 계정은 정보를 전달한 뒤 "발급 처리"를 누릅니다. 발급된 계정은 스위치로 사용을 끄고 켭니다. 꺼진 계정은 로그인할 수 없습니다.</p></div>
   <div class="card"><h3>고객사 담당자 계정 <span class="mute">발급 예정 ${cs.filter(v=>v.x.planned).length}명 / 전체 ${cs.length}명</span></h3>
   ${cs.length?`<table><thead><tr><th>기업</th><th>담당자</th><th>부서·직급</th><th>이메일</th><th>발급 예정</th></tr></thead><tbody>
   ${cs.map(({c,x})=>`<tr><td>${esc(c[2])}</td><td>${esc(x.name)} ${x.primary?'<span class="badge blue">메인</span>':''}</td><td class="mute">${esc([x.dept,x.title].filter(Boolean).join(' · '))}</td><td>${esc(x.email)||'<span class="soft">—</span>'}</td>
   <td><input type="checkbox" data-act="plan" data-cid="${c[0]}" data-id="${x.id}"${x.planned?' checked':''}></td></tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 고객사 담당자가 없습니다. 가져오기에서 영업 시트를 올리면 여기에 나타납니다.</div>'}
-  <p class="soft" style="margin:12px 0 0;font-size:12px">고객사 로그인은 2차 범위입니다. 지금은 발급할 대상만 표시해 둡니다.</p></div></div>`}
+  <p class="soft" style="margin:12px 0 0;font-size:12px">고객사 로그인은 2차 범위입니다. 지금은 발급할 대상만 표시해 둡니다.</p></div>${ui.acctOpen?acctModal():''}</div>`}
+function acctModal(){return `<div class="modal-bg"><form class="modal wide" data-form="acctadd" novalidate role="dialog" aria-modal="true" aria-labelledby="am-t">
+  <h2 id="am-t">계정 일괄 등록</h2><p class="mute">한 줄에 한 명씩 입력합니다. 구글 시트에서 아래 4개 열을 복사해 붙여넣어도 됩니다.</p>
+  <div class="fmt"><span>이름</span><span>소속</span><span>역할</span><span>로그인 ID</span><em>홍운영</em><em>IR큐더스</em><em>운영</em><em>irk-ops2</em><em>강송출</em><em>스트리밍코리아</em><em>(비움)</em><em>sk-02</em></div>
+  <textarea name="text" id="acct-text" style="min-height:160px;font-family:var(--mono);letter-spacing:0;font-size:12px" placeholder="홍운영, IR큐더스, 운영, irk-ops2&#10;강송출, 스트리밍코리아, , sk-02"></textarea>
+  <p class="soft" style="font-size:12px">역할은 IR큐더스 계정만 씁니다(관리자, 영업, 운영, 계약, 개발). 등록하면 "미발급" 상태로 들어가며, 전달 경로와 비밀번호 초기화 방식은 담당자 검토에서 정합니다.</p>
+  <div class="err"></div><div class="actions"><button type="button" class="btn" data-act="acctclose">취소</button><button class="btn primary">미발급 상태로 등록</button></div></form></div>`}
 
 const GLOBAL_FORMS={
   import(f){const rows=parseTable(f.text||'');if(rows.length<2)return '제목 줄과 내용이 한 줄 이상 있어야 합니다.';
@@ -727,7 +782,7 @@ const GLOBAL_FORMS={
       if(A.concat(add).some(a=>a.loginId===id))return `${i+1}번째 줄: 로그인 ID "${id}" 가 이미 있습니다.`;
       const o=org.includes('스트리밍')?'streaming':'irk',rk=Object.keys(ROLE).find(k=>role.includes(ROLE[k]))||'';
       add.push({id:nid(),name,org:o,role:o==='irk'?rk:'',loginId:id,status:'pending',issuedAt:null})}
-    A.push(...add);commit(`${add.length}명을 미발급 상태로 등록했습니다`)}
+    A.push(...add);ui.acctOpen=false;commit(`${add.length}명을 미발급 상태로 등록했습니다`)}
 };
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.map!==undefined){const imp=ui.imp,i=+t.dataset.map;if(t.value)imp.map=imp.map.map((v,j)=>j!==i&&v===t.value?'':v);imp.map[i]=t.value;imp.pick={};analyze();render()}
