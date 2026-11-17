@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>KOSMOS Admin · 전자주총 운영관리 (프로토타입)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap">
+<style>
+:root{
+  --primary:#0071F3; --primary-hover:#005FCC; --primary-soft:rgba(0,113,243,.08);
+  --ink:#15191E; --ink-mute:#60646C; --ink-soft:#8B8D98; --ink-disabled:#B9BBC6;
+  --canvas:#FCFCFD; --sunken:#F5F6F8;
+  --hairline:rgba(66,87,138,.15); --hairline-strong:rgba(21,25,30,.3);
+  --warning:#E8590C; --critical:#D92D20;
+  --font:"Pretendard Variable",Pretendard,Inter,-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+  --mono:"Space Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sh-float:0 12px 20px -14px rgba(16,24,40,.09),0 4px 12px 2px rgba(16,24,40,.1),0 2px 4px -4px rgba(16,24,40,.14);
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:84px}
+body{margin:0;font:400 14px/1.5 var(--font);letter-spacing:-.02em;color:var(--ink);background:var(--sunken);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-weight:500;margin:0}
+h1{font-size:24px;line-height:1.21} h2{font-size:20px;line-height:1.2} h3{font-size:14px}
+a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+.mono{font-family:var(--mono);letter-spacing:0}
+.mute{color:var(--ink-mute)} .soft{color:var(--ink-soft)} .right{text-align:right}
+.cap{font-size:12px;font-weight:500;letter-spacing:.05em;color:var(--ink-mute);text-transform:uppercase}
+
+/* 상단바 */
+.top{position:sticky;top:0;z-index:10;height:60px;background:var(--canvas);border-bottom:1px solid var(--hairline);display:flex;align-items:center;gap:24px;padding:0 24px}
+.brand{font-weight:500;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:8px}
+a.brand:hover{text-decoration:none}
+.brand i{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.top .grow{flex:1}
+.user{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--ink-mute)}
+.user b{font-weight:500;color:var(--ink);font-size:14px}
+
+/* 컨트롤 */
+.btn{height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--hairline);background:var(--canvas);color:var(--ink);font:400 14px/22px var(--font);letter-spacing:0;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--hairline-strong)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--canvas)}
+.btn.primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn.danger{color:var(--critical)}
+.btn.danger.fill{background:var(--critical);border-color:var(--critical);color:var(--canvas)}
+.btn.sm{height:28px;padding:0 8px;border-radius:6px;font-size:12px;line-height:18px}
+.btn:disabled{color:var(--ink-disabled);cursor:not-allowed}
+input,select,textarea{height:36px;width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--hairline);background:var(--canvas);color:var(--ink);font:400 14px/1.5 var(--font);letter-spacing:-.02em;outline:0}
+textarea{height:auto;min-height:96px;resize:vertical}
+input:hover,select:hover,textarea:hover{border-color:var(--hairline-strong)}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+input::placeholder,textarea::placeholder{color:var(--ink-soft)}
+input:disabled,select:disabled,textarea:disabled{background:var(--sunken);color:var(--ink-mute)}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;padding:0;border-radius:6px;border:1px solid var(--hairline-strong);background:var(--canvas);cursor:pointer;display:inline-grid;place-content:center;vertical-align:middle}
+input[type=checkbox]:hover{border-color:var(--ink)}
+input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}
+input[type=checkbox]:checked::after{content:"";width:9px;height:5px;border-left:1.5px solid var(--canvas);border-bottom:1.5px solid var(--canvas);transform:translateY(-1px) rotate(-45deg)}
+input[type=checkbox]:focus-visible{outline:0;border-color:var(--ink)}
+.x-hide{display:none!important}
+/* 커스텀 컨트롤: 셀렉트·날짜·시간·파일 */
+.ctl{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--hairline);background:var(--canvas);color:var(--ink);font:400 14px/1.5 var(--font);letter-spacing:-.02em;text-align:left;cursor:pointer}
+.ctl:hover{border-color:var(--hairline-strong)}
+.ctl:focus-visible,.ctl.open{outline:0;border-color:var(--ink)}
+.ctl .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctl .v.ph{color:var(--ink-soft)}
+.ctl .v.mono{font-family:var(--mono);letter-spacing:0}
+.ctl svg{flex:none;color:var(--ink-mute);transition:transform .15s ease-out}
+.ctl.open svg.chev{transform:rotate(180deg)}
+.ctl .tag{flex:none;font-size:12px;color:var(--ink-mute);border-left:1px solid var(--hairline);padding-left:10px}
+.ctl:disabled{background:var(--sunken);color:var(--ink-mute);cursor:not-allowed}
+.ctl:disabled:hover{border-color:var(--hairline)}
+.pop{position:fixed;z-index:30;background:var(--canvas);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--sh-float);padding:4px;font:400 14px/1.5 var(--font);letter-spacing:-.02em;color:var(--ink)}
+.pop .list{max-height:320px;overflow:auto}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.opt:hover,.opt.act{background:var(--primary-soft)}
+.opt.sel{color:var(--primary)}
+.opt.sel::after{content:"";width:9px;height:5px;border-left:1.5px solid var(--primary);border-bottom:1.5px solid var(--primary);transform:translateY(-2px) rotate(-45deg);flex:none}
+.grp{padding:10px 10px 4px;font-size:12px;font-weight:500;color:var(--ink-mute)}
+.cal{padding:8px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-weight:500}
+.cal-h button,.cal-g button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
+.cal-h button{width:28px;height:28px;color:var(--ink-mute);display:grid;place-content:center}
+.cal-h button:hover,.cal-g button:hover{background:var(--primary-soft)}
+.cal-g{display:grid;grid-template-columns:repeat(7,36px)}
+.cal-g span{height:28px;line-height:28px;text-align:center;font-size:12px;font-weight:500;color:var(--ink-mute)}
+.cal-g button{height:36px;font-family:var(--mono);letter-spacing:0;font-size:13px}
+.cal-g button.out{color:var(--ink-disabled)}
+.cal-g button.today{box-shadow:inset 0 0 0 1px var(--hairline-strong)}
+.cal-g button.sel,.cal-g button.sel:hover{background:var(--primary);color:var(--canvas);box-shadow:none}
+.pop-f{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--hairline);margin-top:8px;padding-top:8px}
+.tm{display:flex;gap:4px;padding:4px}
+.tm .col{width:76px}
+.tm .col .list{max-height:216px}
+.tm .cap{display:block;padding:4px 10px 6px}
+.tm .opt{justify-content:center;font-family:var(--mono);letter-spacing:0}
+.tm .opt.sel{background:var(--primary);color:var(--canvas)}
+.tm .opt.sel::after{display:none}
+input.num{font-family:var(--mono);letter-spacing:0;text-align:right}
+label.f{display:block}
+label.f>span{display:block;font-size:12px;color:var(--ink-mute);margin-bottom:4px}
+.err{color:var(--critical);font-size:12px;margin-top:8px}
+.err:empty{display:none}
+
+/* 레이아웃 */
+.page{max-width:1200px;margin:0 auto;padding:32px 24px 72px}
+.card{background:var(--canvas);border:1px solid var(--hairline);border-radius:12px;padding:24px}
+.card+.card{margin-top:16px}
+.card>h3{margin-bottom:16px}
+.row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.row>*{flex:1;min-width:120px} .row>.fix{flex:0 0 auto;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* 테이블 */
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:500;letter-spacing:.05em;color:var(--ink-mute);text-align:left;background:var(--sunken);padding:0 12px;height:36px;white-space:nowrap}
+th:first-child{border-radius:6px 0 0 6px} th:last-child{border-radius:0 6px 6px 0}
+td{padding:0 12px;height:44px;border-bottom:1px solid var(--hairline);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.link{cursor:pointer} tr.link:hover td{background:var(--primary-soft)}
+td.wrap{white-space:pre-wrap;padding-top:10px;padding-bottom:10px;height:auto}
+td .btn+.btn{margin-left:4px}
+.empty{padding:32px;text-align:center;color:var(--ink-soft)}
+
+/* 배지 */
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;line-height:18px;border:1px solid var(--hairline);color:var(--ink-mute);white-space:nowrap}
+.badge.blue{border-color:var(--primary);color:var(--primary)}
+.badge.warn{border-color:var(--warning);color:var(--warning)}
+.done{color:var(--ink-mute)}
+.done::before{content:"✓ "}
+
+/* 탭 */
+.tabs{display:flex;gap:24px;border-bottom:1px solid var(--hairline);margin:24px 0}
+.tabs a{padding:10px 0;color:var(--ink-mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs a:hover{text-decoration:none;color:var(--ink)}
+.tabs a.on{color:var(--ink);border-bottom-color:var(--primary)}
+
+/* 기타 */
+.demo{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:6px 24px;font-size:12px;color:var(--ink-mute);display:flex;gap:8px;align-items:center}
+.login{max-width:400px;margin:96px auto;padding:0 24px}
+.login .card{padding:32px}
+.acct{display:flex;justify-content:space-between;align-items:center;width:100%;height:auto;padding:12px;text-align:left;margin-top:8px}
+.acct small{color:var(--ink-mute);display:block}
+.note{border:1px solid var(--hairline);border-radius:10px;padding:12px 16px}
+.note+.note{margin-top:8px}
+.note p{margin:4px 0 8px;white-space:pre-wrap}
+.note .meta{font-size:12px;color:var(--ink-soft)}
+.total{display:flex;justify-content:flex-end;align-items:baseline;gap:16px;padding:16px 12px 0;border-top:1px solid var(--hairline-strong);margin-top:8px}
+.total b{font:400 20px var(--mono);letter-spacing:0}
+.chk{display:flex;align-items:center;gap:12px;min-height:44px;border-bottom:1px solid var(--hairline)}
+.chk:last-child{border-bottom:0}
+.chk .t{flex:1} .chk.on .t{color:var(--ink-mute)}
+.bar{height:4px;background:var(--sunken);border-radius:9999px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--primary)}
+.prog{display:flex;align-items:center;gap:8px}
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--canvas);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--sh-float);padding:10px 16px;z-index:20}
+@media(max-width:800px){.grid2,.grid4{grid-template-columns:1fr}.tabs{overflow-x:auto;white-space:nowrap}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const COMPANIES=[[1,"024110","기업은행","코스피"],[2,"005930","삼성전자","코스피"],[3,"032830","삼성생명","코스피"],[4,"000660","SK하이닉스","코스피"],[5,"015760","한국전력","코스피"],[6,"088350","한화생명","코스피"],[7,"006800","미래에셋증권","코스피"],[8,"005380","현대차","코스피"],[9,"000810","삼성화재","코스피"],[10,"005940","NH투자증권","코스피"],[11,"323410","카카오뱅크","코스피"],[12,"016360","삼성증권","코스피"],[13,"039490","키움증권","코스피"],[14,"028260","삼성물산","코스피"],[15,"000270","기아","코스피"],[16,"005830","DB손해보험","코스피"],[17,"005490","POSCO홀딩스","코스피"],[18,"036460","한국가스공사","코스피"],[19,"001450","현대해상","코스피"],[20,"096770","SK이노베이션","코스피"],[21,"012330","현대모비스","코스피"],[22,"003490","대한항공","코스피"],[23,"055550","신한지주","코스피"],[24,"066570","LG전자","코스피"],[25,"051910","LG화학","코스피"],[26,"011200","HMM","코스피"],[27,"085620","미래에셋생명","코스피"],[28,"279570","케이뱅크","코스피"],[29,"029780","삼성카드","코스피"],[30,"004020","현대제철","코스피"],[31,"373220","LG에너지솔루션","코스피"],[32,"105560","KB금융","코스피"],[33,"023530","롯데쇼핑","코스피"],[34,"030200","KT","코스피"],[35,"003540","대신증권","코스피"],[36,"316140","우리금융지주","코스피"],[37,"086790","하나금융지주","코스피"],[38,"010950","S-Oil","코스피"],[39,"034730","SK","코스피"],[40,"329180","HD현대중공업","코스피"],[41,"017670","SK텔레콤","코스피"],[42,"034220","LG디스플레이","코스피"],[43,"012450","한화에어로스페이스","코스피"],[44,"006400","삼성SDI","코스피"],[45,"068270","셀트리온","코스피"],[46,"139480","이마트","코스피"],[47,"035420","NAVER","코스피"],[48,"000370","한화손해보험","코스피"],[49,"042660","한화오션","코스피"],[50,"009830","한화솔루션","코스피"],[51,"003470","유안타증권","코스피"],[52,"032640","LG유플러스","코스피"],[53,"030610","교보증권","코스피"],[54,"011170","롯데케미칼","코스피"],[55,"000720","현대건설","코스피"],[56,"010130","고려아연","코스피"],[57,"003530","한화투자증권","코스피"],[58,"086280","현대글로비스","코스피"],[59,"002380","KCC","코스피"],[60,"034020","두산에너빌리티","코스피"],[61,"010140","삼성중공업","코스피"],[62,"000400","롯데손해보험","코스피"],[63,"003690","코리안리","코스피"],[64,"071050","한국금융지주","코스피"],[65,"047050","포스코인터내셔널","코스피"],[66,"006360","GS건설","코스피"],[67,"009540","HD한국조선해양","코스피"],[68,"000540","흥국화재","코스피"],[69,"001720","신영증권","코스피"],[70,"001500","현대차증권","코스피"],[71,"035720","카카오","코스피"],[72,"033780","KT&G","코스피"],[73,"000880","한화","코스피"],[74,"207940","삼성바이오로직스","코스피"],[75,"047040","대우건설","코스피"],[76,"020560","아시아나항공","코스피"],[77,"016610","DB증권","코스피"],[78,"028670","팬오션","코스피"],[79,"097950","CJ제일제당","코스피"],[80,"003550","LG","코스피"],[81,"001200","유진투자증권","코스피"],[82,"078020","LS증권","코스닥"],[83,"047810","한국항공우주","코스피"],[84,"011070","LG이노텍","코스피"],[85,"009150","삼성전기","코스피"],[86,"004170","신세계","코스피"],[87,"031210","서울보증보험","코스피"],[88,"272210","한화시스템","코스피"],[89,"004990","롯데지주","코스피"],[90,"064350","현대로템","코스피"],[91,"267250","HD현대","코스피"],[92,"161390","한국타이어앤테크놀로지","코스피"],[93,"018260","삼성에스디에스","코스피"],[94,"071320","지역난방공사","코스피"],[95,"259960","크래프톤","코스피"],[96,"000120","CJ대한통운","코스피"],[97,"006220","제주은행","코스피"],[98,"079550","LIG디펜스앤에어로스페이스","코스피"],[99,"003670","포스코퓨처엠","코스피"],[100,"069960","현대백화점","코스피"],[101,"028050","삼성E&A","코스피"],[102,"138930","BNK금융지주","코스피"],[103,"294870","IPARK현대산업개발","코스피"],[104,"018880","한온시스템","코스피"],[105,"007070","GS리테일","코스피"],[106,"251270","넷마블","코스피"],[107,"375500","DL이앤씨","코스피"],[108,"078930","GS","코스피"],[109,"000150","두산","코스피"],[110,"089860","롯데렌탈","코스피"],[111,"402340","SK스퀘어","코스피"],[112,"120110","코오롱인더","코스피"],[113,"001510","SK증권","코스피"],[114,"006260","LS","코스피"],[115,"018670","SK가스","코스피"],[116,"090430","아모레퍼시픽","코스피"],[117,"011210","현대위아","코스피"],[118,"030210","다올투자증권","코스피"],[119,"138040","메리츠금융지주","코스피"],[120,"035760","CJ ENM","코스닥"],[121,"139130","iM금융지주","코스피"],[122,"023760","한국캐피탈","코스닥"],[123,"298040","효성중공업","코스피"],[124,"051900","LG생활건강","코스피"],[125,"021240","코웨이","코스피"],[126,"064400","LG씨엔에스","코스피"],[127,"035250","강원랜드","코스피"],[128,"001120","LX인터내셔널","코스피"],[129,"011780","금호석유화학","코스피"],[130,"036570","NC","코스피"],[131,"460860","동국제강","코스피"],[132,"280360","롯데웰푸드","코스피"],[133,"017940","E1","코스피"],[134,"241560","두산밥캣","코스피"],[135,"204320","HL만도","코스피"],[136,"010120","LS ELECTRIC","코스피"],[137,"073240","금호타이어","코스피"],[138,"000210","DL","코스피"],[139,"103140","풍산","코스피"],[140,"003240","태광산업","코스피"],[141,"175330","JB금융지주","코스피"],[142,"352820","하이브","코스피"],[143,"395400","SK리츠","코스피"],[144,"006040","동원산업","코스피"],[145,"267260","HD현대일렉트릭","코스피"],[146,"002350","넥센타이어","코스피"],[147,"377300","카카오페이","코스피"],[148,"282330","BGF리테일","코스피"],[149,"005300","롯데칠성","코스피"],[150,"001040","CJ","코스피"],[151,"0126Z0","삼성에피스홀딩스","코스피"],[152,"001740","SK네트웍스","코스피"],[153,"004690","삼천리","코스피"],[154,"004800","효성","코스피"],[155,"003620","KG모빌리티","코스피"],[156,"002320","한진","코스피"],[157,"004370","농심","코스피"],[158,"001440","대한전선","코스피"],[159,"180640","한진칼","코스피"],[160,"307950","현대오토에버","코스피"],[161,"066970","엘앤에프","코스피"],[162,"001680","대상","코스피"],[163,"000080","하이트진로","코스피"],[164,"300720","한일시멘트","코스피"],[165,"016380","KG스틸","코스피"],[166,"000240","한국앤컴퍼니","코스피"],[167,"010780","아이에스동서","코스피"],[168,"008770","호텔신라","코스피"],[169,"145990","삼양사","코스피"],[170,"003070","코오롱글로벌","코스피"],[171,"247540","에코프로비엠","코스닥"],[172,"003380","하림지주","코스닥"],[173,"017800","현대엘리베이터","코스피"],[174,"000100","유한양행","코스피"],[175,"005850","에스엘","코스피"],[176,"007310","오뚜기","코스피"],[177,"330590","롯데리츠","코스피"],[178,"361610","SK아이이테크놀로지","코스피"],[179,"111770","영원무역","코스피"],[180,"011790","SKC","코스피"],[181,"004000","롯데정밀화학","코스피"],[182,"086520","에코프로","코스닥"],[183,"000990","DB하이텍","코스피"],[184,"137310","에스디바이오센서","코스피"],[185,"015750","성우하이텍","코스닥"],[186,"097230","HJ중공업","코스피"],[187,"267270","HD건설기계","코스피"],[188,"010060","OCI홀딩스","코스피"],[189,"006280","녹십자","코스피"],[190,"344820","KCC글라스","코스피"],[191,"079160","CJ CGV","코스피"],[192,"012630","HDC","코스피"],[193,"012750","에스원","코스피"],[194,"285130","SK케미칼","코스피"],[195,"089590","제주항공","코스피"],[196,"298020","효성티앤씨","코스피"],[197,"013580","계룡건설","코스피"],[198,"000070","삼양홀딩스","코스피"],[199,"383220","F&F","코스피"],[200,"298050","HS효성첨단소재","코스피"],[201,"006730","서부T&D","코스닥"],[202,"302440","SK바이오사이언스","코스피"],[203,"002790","아모레퍼시픽홀딩스","코스피"],[204,"060980","HL홀딩스","코스피"],[205,"456040","OCI","코스피"],[206,"069620","대웅제약","코스피"],[207,"195940","HK이노엔","코스닥"],[208,"001800","오리온홀딩스","코스피"],[209,"009410","태영건설","코스피"],[210,"034230","파라다이스","코스피"],[211,"005880","대한해운","코스피"],[212,"006650","대한유화","코스피"]];   // [id, 종목코드, 기업명, 시장]
+const ORG={irk:'IR큐더스',streaming:'스트리밍코리아',customer:'고객사'};
+const USERS=[
+  {id:'u1',name:'김운영',org:'irk',role:'ops',label:'IR큐더스 · 운영',desc:'전체 기업 조회·수정, 계약은 조회만'},
+  {id:'u2',name:'박계약',org:'irk',role:'contract',label:'IR큐더스 · 계약담당',desc:'전체 기업 조회·수정, 계약 수정'},
+  {id:'u3',name:'이송출',org:'streaming',label:'스트리밍코리아',desc:'배정 기업 6곳만, 견적 작성·체크, 계약 비공개',assigned:[1,2,3,4,5,6]}
+];
+const TABS=[['basic','기본정보'],['schedule','일정'],['agenda','의안'],['estimate','스트리밍 견적'],['check','체크리스트'],['req','고객사 요구사항'],['contract','계약']];
+const AGENDA_TYPES=[
+  ['결산 및 배당',['재무제표 승인','이익 배당']],
+  ['정관 변경',['정관 변경','정관변경(집중투표 배제 및 해지)']],
+  ['임원 선임 및 해임',['이사선임','이사해임','감사선임','감사해임','감사위원회 감사위원 선임(독립이사)','감사위원회 감사위원 해임(독립이사)','감사위원회 감사위원 선임(일반)','감사위원회 감사위원 해임(일반)']],
+  ['임원 보수',['이사 보수한도 승인','감사 보수한도 승인']],
+  ['지배구조 및 사업구조 변경',['합병계약서의 승인','분할계획서의 승인','분할합병계약서의 승인','영업의 양도/양수 및 포괄적 계약 체결 승인']],
+  ['기타',['기타']]
+];
+const KEY='kosmos-admin-demo-v1';
+
+/* ---------- 상태 ---------- */
+let db; try{db=JSON.parse(localStorage.getItem(KEY))}catch(e){} if(!db||!db.m)db={m:{},seq:1};
+let user=null; try{user=USERS.find(u=>u.id===sessionStorage.getItem(KEY+'-user'))||null}catch(e){}
+let ui={q:'',edit:null,confirm:null};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}};
+const nid=()=>db.seq++;
+const co=id=>COMPANIES.find(c=>c[0]===+id);
+function mt(cid){
+  return db.m[cid]||(db.m[cid]={title:'2027년 정기주주총회',date:'',time:'',address:'',addressDetail:'',notes:'',shareholders:'',
+    sched:{pre_d:'',mock_d:'',mock_t:'',reh_d:'',reh_t:''},contacts:[],agendas:[],items:[],memos:[],checks:[],reqs:[],
+    contract:{title:'',amount:'',vat:'미정',finalId:null,versions:[],finalLog:[]}});
+}
+const can={
+  seeCompany:id=>user.org==='irk'||(user.assigned||[]).includes(+id),
+  editBasic:()=>user.org==='irk',
+  manageChecks:()=>user.org==='irk',
+  seeContract:()=>user.org==='irk',
+  editContract:()=>user.org==='irk'&&user.role==='contract',
+  seeReq:r=>user.org==='irk'||r.vis!=='internal'||r.createdById===user.id,
+  editReq:r=>user.org==='irk'||r.createdById===user.id
+};
+
+/* ---------- 도우미 ---------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won=n=>n===''||n==null?'':Number(n).toLocaleString('ko-KR');
+const tbd='<span class="soft">미정</span>';
+const dt=(d,t)=>d?esc(d.replaceAll('-','.'))+(t?' '+esc(t):' <span class="soft">시간 미정</span>'):tbd;
+const stampStr=iso=>{const d=new Date(iso),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`};
+const stamp=(o,isNew)=>{const n=new Date().toISOString();if(isNew){o.createdBy=user.name;o.createdById=user.id;o.createdOrg=user.org;o.createdAt=n}else{o.updatedBy=user.name;o.updatedAt=n}return o};
+const meta=o=>`작성 ${esc(o.createdBy)} (${ORG[o.createdOrg]}) · ${stampStr(o.createdAt)}`+(o.updatedAt?` · 수정 ${esc(o.updatedBy)} · ${stampStr(o.updatedAt)}`:'');
+const opt=(list,sel)=>list.map(v=>{const[a,b]=Array.isArray(v)?v:[v,v];return `<option value="${esc(a)}"${a===sel?' selected':''}>${esc(b)}</option>`}).join('');
+const orgOpts=sel=>opt([['customer','고객사'],['irk','IR큐더스'],['streaming','스트리밍코리아']],sel);
+const dis=ok=>ok?'':' disabled';
+let toastT; function toast(msg){document.querySelector('.toast')?.remove();const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),2200)}
+function commit(msg){if(save()){ui.edit=null;ui.confirm=null;render();toast(msg||'저장했습니다')}else toast('저장하지 못했습니다. 다시 시도해 주세요')}
+function delBtns(kind,id){const k=kind+':'+id;
+  return ui.confirm===k?`<button class="btn sm danger fill" data-act="del" data-kind="${kind}" data-id="${id}">삭제 확인</button><button class="btn sm" data-act="cancel">취소</button>`
+                       :`<button class="btn sm danger" data-act="ask" data-key="${k}">삭제</button>`}
+const editing=(kind,list)=>ui.edit&&ui.edit.kind===kind?list.find(x=>x.id===ui.edit.id):null;
+
+
+/* ---------- 커스텀 컨트롤 (네이티브 셀렉트·달력·시간·파일 대체) ---------- */
+const svg=(cls,d)=>`<svg class="${cls}" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICON={chev:svg('chev','<path d="M4 6l4 4 4-4"/>'),cal:svg('ic','<rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/>'),
+  clock:svg('ic','<circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/>'),prev:svg('ic','<path d="M10 4L6 8l4 4"/>'),next:svg('ic','<path d="M6 4l4 4-4 4"/>')};
+let pop=null;
+function closePop(){if(!pop)return;pop.el.remove();pop.trigger.classList.remove('open');pop=null}
+function placePop(){if(!pop)return;const r=pop.trigger.getBoundingClientRect(),el=pop.el;if(pop.fit)el.style.minWidth=r.width+'px';
+  const h=el.offsetHeight,w=el.offsetWidth;el.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';
+  el.style.top=(innerHeight-r.bottom<h+12&&r.top>h+12?r.top-h-4:r.bottom+4)+'px'}
+function openPop(trigger,fit,build){const same=pop&&pop.trigger===trigger;closePop();if(same)return;
+  const el=document.createElement('div');el.className='pop';document.body.appendChild(el);pop={el,trigger,fit};trigger.classList.add('open');build(el);placePop()}
+function setVal(inp,v){inp.value=v;inp.dispatchEvent(new Event('change',{bubbles:true}))}
+function mkCtl(inp,icon,mono){const b=document.createElement('button');b.type='button';b.className='ctl';b.disabled=inp.disabled;
+  b.innerHTML=`<span class="v${mono?' mono':''}"></span>${icon}`;inp.classList.add('x-hide');inp.after(b);return b}
+const p2=n=>String(n).padStart(2,'0');
+
+function enhance(){
+  closePop();
+  document.querySelectorAll('select:not(.x-hide)').forEach(sel=>{
+    const b=mkCtl(sel,ICON.chev),v=b.firstChild;
+    const sync=()=>{const o=sel.selectedOptions[0];v.textContent=o?o.textContent:'';v.classList.toggle('ph',!sel.value)};sync();
+    b.onclick=()=>openPop(b,true,el=>{
+      let h='<div class="list" role="listbox">';
+      [...sel.children].forEach(c=>{if(c.tagName==='OPTGROUP'){h+=`<div class="grp">${esc(c.label)}</div>`;[...c.children].forEach(o=>h+=row(o))}else h+=row(c)});
+      function row(o){return o.value===''?'':`<div class="opt${o.value===sel.value?' sel act':''}" role="option" data-v="${esc(o.value)}">${esc(o.textContent)}</div>`}
+      el.innerHTML=h+'</div>';el.querySelector('.sel')?.scrollIntoView({block:'nearest'});
+      el.onclick=e=>{const o=e.target.closest('.opt');if(!o)return;setVal(sel,o.dataset.v);sync();closePop();b.focus()}});
+  });
+  document.querySelectorAll('input[type=date]:not(.x-hide)').forEach(inp=>{
+    const b=mkCtl(inp,ICON.cal,true),v=b.firstChild;
+    const sync=()=>{v.textContent=inp.value?inp.value.replaceAll('-','.'):'미정';v.classList.toggle('ph',!inp.value);v.classList.toggle('mono',!!inp.value)};sync();
+    b.onclick=()=>openPop(b,false,el=>{
+      const now=new Date(),today=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}`;
+      let [y,mo]=(inp.value||today).split('-').map(Number);
+      const draw=()=>{const first=new Date(y,mo-1,1),start=new Date(y,mo-1,1-first.getDay());let g='';
+        for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+          g+=`<button type="button" data-d="${k}" class="${d.getMonth()!==mo-1?'out ':''}${k===today?'today ':''}${k===inp.value?'sel':''}">${d.getDate()}</button>`}
+        el.innerHTML=`<div class="cal"><div class="cal-h"><button type="button" data-nav="-1" aria-label="이전 달">${ICON.prev}</button><span>${y}년 ${mo}월</span><button type="button" data-nav="1" aria-label="다음 달">${ICON.next}</button></div>
+          <div class="cal-g">${['일','월','화','수','목','금','토'].map(w=>`<span>${w}</span>`).join('')}${g}</div>
+          <div class="pop-f"><button type="button" class="btn sm" data-d="">미정으로 비우기</button><button type="button" class="btn sm" data-d="${today}">오늘</button></div></div>`};
+      draw();
+      el.onclick=e=>{const n=e.target.closest('[data-nav]'),d=e.target.closest('[data-d]');
+        if(n){mo+=+n.dataset.nav;if(mo<1){mo=12;y--}if(mo>12){mo=1;y++}draw();placePop()}
+        else if(d){setVal(inp,d.dataset.d);sync();closePop();b.focus()}}});
+  });
+  document.querySelectorAll('input[type=time]:not(.x-hide)').forEach(inp=>{
+    const b=mkCtl(inp,ICON.clock,true),v=b.firstChild;
+    const sync=()=>{v.textContent=inp.value||'미정';v.classList.toggle('ph',!inp.value);v.classList.toggle('mono',!!inp.value)};sync();
+    b.onclick=()=>openPop(b,false,el=>{
+      const draw=()=>{const [h,mi]=inp.value?inp.value.split(':'):[null,null];
+        el.innerHTML=`<div class="tm"><div class="col"><span class="cap">시</span><div class="list">${Array.from({length:24},(_,i)=>`<div class="opt${p2(i)===h?' sel':''}" data-h="${p2(i)}">${p2(i)}</div>`).join('')}</div></div>
+          <div class="col"><span class="cap">분</span><div class="list">${Array.from({length:12},(_,i)=>`<div class="opt${p2(i*5)===mi?' sel':''}" data-m="${p2(i*5)}">${p2(i*5)}</div>`).join('')}</div></div></div>
+          <div class="pop-f" style="margin:0 4px 4px"><button type="button" class="btn sm" data-clear>미정으로 비우기</button><button type="button" class="btn sm" data-ok>확인</button></div>`;
+        el.querySelectorAll('.sel').forEach(x=>x.scrollIntoView({block:'center'}))};
+      draw();
+      el.onclick=e=>{const t=e.target,[h,mi]=inp.value?inp.value.split(':'):['09','00'];
+        if(t.dataset.h){setVal(inp,t.dataset.h+':'+(inp.value?mi:'00'));sync();draw()}
+        else if(t.dataset.m){setVal(inp,h+':'+t.dataset.m);sync();closePop();b.focus()}
+        else if(t.closest('[data-clear]')){setVal(inp,'');sync();closePop();b.focus()}
+        else if(t.closest('[data-ok]')){closePop();b.focus()}}});
+  });
+  document.querySelectorAll('input[type=file]:not(.x-hide)').forEach(inp=>{
+    const b=mkCtl(inp,'<span class="tag">찾아보기</span>'),v=b.firstChild;
+    const sync=()=>{const f=inp.files[0];v.textContent=f?f.name:'선택된 파일 없음';v.classList.toggle('ph',!f)};sync();
+    b.onclick=()=>inp.click();inp.addEventListener('change',sync);
+  });
+}
+document.addEventListener('mousedown',e=>{if(pop&&!pop.el.contains(e.target)&&!pop.trigger.contains(e.target))closePop()});
+addEventListener('scroll',e=>{if(pop&&!(e.target instanceof Node&&pop.el.contains(e.target)))closePop()},true);
+addEventListener('resize',closePop);
+document.addEventListener('keydown',e=>{if(!pop)return;
+  if(e.key==='Escape'){const t=pop.trigger;closePop();t.focus();return}
+  const opts=[...pop.el.querySelectorAll('[role=listbox] .opt')];if(!opts.length)return;
+  let i=opts.findIndex(o=>o.classList.contains('act'));
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();opts[i]?.classList.remove('act');i=e.key==='ArrowDown'?Math.min(opts.length-1,i+1):Math.max(0,i-1);opts[i].classList.add('act');opts[i].scrollIntoView({block:'nearest'})}
+  else if(e.key==='Enter'&&i>=0){e.preventDefault();opts[i].click()}});
+
+/* ---------- 라우팅 ---------- */
+function route(){const h=location.hash.replace(/^#\/?/,'').split('/');return h[0]==='c'?{cid:+h[1],tab:h[2]||'basic'}:{}}
+addEventListener('hashchange',()=>{ui.edit=null;ui.confirm=null;render();scrollTo(0,0)});
+
+function render(){
+  const app=document.getElementById('app');
+  closePop();
+  if(!user){app.innerHTML=viewLogin();return}
+  const r=route();
+  const body=r.cid&&co(r.cid)&&can.seeCompany(r.cid)?viewDetail(r):r.cid?`<div class="page"><div class="card empty">접근 권한이 없거나 없는 기업입니다. <a href="#/">기업 목록으로</a></div></div>`:viewList();
+  app.innerHTML=`<div class="top"><a class="brand" href="#/"><i></i>KOSMOS Admin</a><span class="mute">전자주총 운영관리</span><span class="grow"></span>
+    <div class="user"><span><b>${esc(user.name)}</b> · ${esc(user.label)}</span><button class="btn sm" data-act="logout">로그아웃</button></div></div>
+    <div class="demo"><span class="badge warn">시연용</span>입력한 내용은 이 브라우저에만 저장됩니다. 실제 DB와 연결되어 있지 않습니다.<span class="grow" style="flex:1"></span><button class="btn sm" data-act="reset">입력 내용 초기화</button></div>${body}`;
+  enhance();
+}
+
+/* ---------- 로그인 ---------- */
+function viewLogin(){return `<div class="login"><div class="card"><div class="brand" style="margin-bottom:24px"><i></i>KOSMOS Admin</div>
+  <h1>로그인</h1><p class="mute">발급받은 계정으로 로그인합니다. 회원가입은 없습니다.</p>
+  <form data-form="login"><label class="f"><span>아이디</span><input name="id" placeholder="발급 계정" disabled></label>
+  <label class="f" style="margin-top:12px"><span>비밀번호</span><input type="password" disabled></label></form>
+  <p class="cap" style="margin:24px 0 0">시연용 계정으로 들어가기</p>
+  ${USERS.map(u=>`<button class="btn acct" data-act="login" data-id="${u.id}"><span>${esc(u.label)}<small>${esc(u.desc)}</small></span><span class="soft">→</span></button>`).join('')}
+  </div></div>`}
+
+/* ---------- 기업 목록 ---------- */
+function listRows(){
+  const q=ui.q.trim().toLowerCase();
+  return COMPANIES.filter(c=>can.seeCompany(c[0])&&(!q||c[2].toLowerCase().includes(q)||c[1].toLowerCase().includes(q)));
+}
+function listBody(){
+  const rows=listRows(),sc=can.seeContract();
+  if(!rows.length)return `<div class="empty">검색결과가 없습니다.</div>`;
+  return `<table><thead><tr><th>기업명</th><th>종목코드</th><th>시장</th><th>주총일시</th>${sc?'<th class="right">계약금액</th><th>계약서</th>':''}<th>체크리스트</th></tr></thead><tbody>
+  ${rows.map(c=>{const m=db.m[c[0]],ch=m?m.checks:[],dn=ch.filter(x=>x.done).length,ct=m&&m.contract;
+    return `<tr class="link" data-act="open" data-id="${c[0]}"><td>${esc(c[2])}</td><td class="mono mute">${c[1]}</td><td class="mute">${c[3]}</td><td>${m?dt(m.date,m.time):tbd}</td>
+    ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">—</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">—</span>'}</td>`:''}
+    <td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">—</span>'}</td></tr>`}).join('')}
+  </tbody></table>`}
+function viewList(){const n=listRows().length;
+  return `<div class="page"><div class="head"><div><h1>기업 목록</h1><p class="mute" style="margin:4px 0 0">${user.org==='irk'?'초기 관리대상 '+COMPANIES.length+'개사':'배정된 기업'} · <span id="cnt">${n}</span>곳 표시</p></div>
+  <div style="width:320px"><input id="q" placeholder="기업명 또는 종목코드 검색" value="${esc(ui.q)}" autocomplete="off"></div></div>
+  <div class="card" id="list" style="padding:12px">${listBody()}</div></div>`}
+
+/* ---------- 기업 상세 ---------- */
+function viewDetail(r){
+  const c=co(r.cid),m=mt(r.cid),tabs=TABS.filter(t=>t[0]!=='contract'||can.seeContract());
+  const tab=tabs.find(t=>t[0]===r.tab)?r.tab:'basic';
+  return `<div class="page"><a href="#/" class="mute">← 기업 목록</a>
+  <div class="head" style="margin-top:12px;margin-bottom:0"><div><h1>${esc(c[2])}</h1><p class="mute" style="margin:4px 0 0"><span class="mono">${c[1]}</span> · ${c[3]} · ${esc(m.title)}</p></div>
+  <div class="right"><div class="cap">주총일시</div><div style="font-size:16px">${dt(m.date,m.time)}</div></div></div>
+  <div class="tabs">${tabs.map(t=>`<a href="#/c/${r.cid}/${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</a>`).join('')}</div>
+  ${PANELS[tab](m,r.cid)}</div>`}
+
+const PANELS={
+basic(m){const e=can.editBasic(),ed=editing('contact',m.contacts)||{};
+  return `<form class="card" data-form="basic" novalidate><h3>주주총회 정보</h3>
+  <div class="grid4"><label class="f"><span>주총일자</span><input type="date" name="date" value="${esc(m.date)}"${dis(e)}></label>
+  <label class="f"><span>주총 시간</span><input type="time" name="time" value="${esc(m.time)}"${dis(e)}></label>
+  <label class="f" style="grid-column:span 2"><span>예상 주주수 (주주명부 기준)</span><input class="num" name="shareholders" inputmode="numeric" placeholder="미입력" value="${won(m.shareholders)}"${dis(e)}></label></div>
+  <div class="grid2" style="margin-top:12px"><label class="f"><span>주소</span><input name="address" value="${esc(m.address)}"${dis(e)}></label>
+  <label class="f"><span>상세주소</span><input name="addressDetail" placeholder="건물명, 층, 회의실" value="${esc(m.addressDetail)}"${dis(e)}></label></div>
+  <label class="f" style="margin-top:12px"><span>주총소집지 특이사항</span><textarea name="notes"${dis(e)}>${esc(m.notes)}</textarea></label>
+  <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>
+  <div class="card"><h3>고객사 담당자 <span class="mute">${m.contacts.length}명</span></h3>
+  ${m.contacts.length?`<table><thead><tr><th>담당자명</th><th>연락처</th><th>이메일</th><th>역할</th>${e?'<th></th>':''}</tr></thead><tbody>
+  ${m.contacts.map(x=>`<tr><td>${esc(x.name)}</td><td class="mono">${esc(x.phone)||'<span class="soft">—</span>'}</td><td>${esc(x.email)||'<span class="soft">—</span>'}</td><td class="mute">${esc(x.role)}</td>
+  ${e?`<td class="right"><button class="btn sm" data-act="edit" data-kind="contact" data-id="${x.id}">수정</button>${delBtns('contact',x.id)}</td>`:''}</tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 담당자가 없습니다.</div>'}
+  ${e?`<form data-form="contact" novalidate style="margin-top:16px"><div class="row">
+  <label class="f"><span>담당자명 *</span><input name="name" value="${esc(ed.name)}"></label><label class="f"><span>연락처</span><input name="phone" placeholder="010-0000-0000" value="${esc(ed.phone)}"></label>
+  <label class="f"><span>이메일</span><input name="email" type="email" value="${esc(ed.email)}"></label><label class="f"><span>역할</span><input name="role" placeholder="IR, 법무 등" value="${esc(ed.role)}"></label>
+  <span class="fix"><button class="btn">${ed.id?'수정 저장':'담당자 추가'}</button>${ed.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div><div class="err"></div></form>`:''}</div>`},
+
+schedule(m){const e=can.editBasic(),s=m.sched;
+  const rowf=(label,d,t,hint)=>`<tr><td style="width:180px">${label}</td><td style="width:200px"><input type="date" name="${d}" value="${esc(d==='date'?m.date:s[d])}"${dis(e)}></td>
+    <td style="width:160px">${t?`<input type="time" name="${t}" value="${esc(t==='time'?m.time:s[t])}"${dis(e)}>`:'<span class="soft">일자만 입력</span>'}</td><td class="mute">${hint||''}</td></tr>`;
+  return `<form class="card" data-form="schedule" novalidate><h3>운영 일정</h3><table><thead><tr><th>일정</th><th>일자</th><th>시간</th><th></th></tr></thead><tbody>
+  ${rowf('사전점검','pre_d')}${rowf('사전 모의주총','mock_d','mock_t')}${rowf('리허설','reh_d','reh_t')}${rowf('주주총회','date','time','기본정보의 주총일시와 같은 값입니다')}
+  </tbody></table><p class="soft" style="margin:12px 0 0;font-size:12px">정해지지 않은 일정은 비워 두면 "미정"으로 표시됩니다. 모든 시간은 한국시간입니다.</p>
+  <div class="err"></div>${e?'<div class="actions"><button class="btn primary">저장</button></div>':''}</form>`},
+
+agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
+  return `<div class="card"><h3>의안 <span class="mute">${m.agendas.length}건</span></h3>
+  ${m.agendas.length?`<table><thead><tr><th>번호</th><th>의안 종류</th><th>결의방법</th><th>의안명</th>${e?'<th></th>':''}</tr></thead><tbody>
+  ${m.agendas.map(a=>`<tr><td class="mono">${esc(a.no)}</td><td>${esc(a.type)}</td><td><span class="badge">${esc(a.res)}</span></td><td class="wrap">${esc(a.ko)}${a.en?`<div class="soft" style="font-size:12px">${esc(a.en)}</div>`:''}</td>
+  ${e?`<td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="agenda" data-id="${a.id}">수정</button>${delBtns('agenda',a.id)}</td>`:''}</tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 의안이 없습니다.</div>'}</div>
+  ${e?`<form class="card" data-form="agenda" novalidate><h3>${ed.id?'의안 수정':'의안 추가'}</h3><div class="row">
+  <label class="f fix" style="width:96px"><span>의안번호</span><input name="no" placeholder="1, 2-1" value="${esc(ed.no)}"></label>
+  <label class="f"><span>의안 종류 *</span><select name="type"><option value="">선택</option>${AGENDA_TYPES.map(g=>`<optgroup label="${g[0]}">${opt(g[1],ed.type)}</optgroup>`).join('')}</select></label>
+  <label class="f fix" style="width:140px"><span>결의방법 *</span><select name="res"><option value="">선택</option>${opt(['보통결의','특별결의'],ed.res)}</select></label></div>
+  <div class="grid2" style="margin-top:12px"><label class="f"><span>의안명 (국문) *</span><input name="ko" value="${esc(ed.ko)}"></label><label class="f"><span>의안명 (영문)</span><input name="en" value="${esc(ed.en)}"></label></div>
+  <p class="soft" style="margin:12px 0 0;font-size:12px">의안 종류를 골라도 결의방법은 자동으로 정해지지 않습니다. 직접 선택해 주세요.</p>
+  <div class="err"></div><div class="actions">${ed.id?'<button type="button" class="btn" data-act="cancel">취소</button>':''}<button class="btn primary">${ed.id?'수정 저장':'의안 추가'}</button></div></form>`:''}`},
+
+estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x.qty*x.price,0),em=editing('memo',m.memos)||{};
+  return `<div class="card"><h3>견적 항목 <span class="mute">${m.items.length}건</span></h3>
+  ${m.items.length?`<table><thead><tr><th>구분</th><th>장비·서비스명</th><th>단위</th><th class="right">수량</th><th class="right">단가</th><th class="right">금액</th><th></th></tr></thead><tbody>
+  ${m.items.map(x=>`<tr><td><span class="badge">${esc(x.kind)}</span></td><td>${esc(x.name)}</td><td class="mute">${esc(x.unit)}</td><td class="right mono">${won(x.qty)}</td><td class="right mono">${won(x.price)}</td><td class="right mono">${won(x.qty*x.price)}</td>
+  <td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="item" data-id="${x.id}">수정</button>${delBtns('item',x.id)}</td></tr>`).join('')}</tbody></table>
+  <div class="total"><span class="mute">합계 (부가세 제외 공급가액) · 수량 × 단가의 합</span><b>${won(total)}원</b></div>`:'<div class="empty">등록된 견적 항목이 없습니다.</div>'}
+  <form data-form="item" novalidate style="margin-top:16px"><div class="row">
+  <label class="f fix" style="width:100px"><span>구분 *</span><select name="kind">${opt(['장비','서비스'],ed.kind)}</select></label>
+  <label class="f" style="flex:2"><span>장비·서비스명 *</span><input name="name" value="${esc(ed.name)}"></label>
+  <label class="f fix" style="width:80px"><span>단위</span><input name="unit" placeholder="대, 명, 식" value="${esc(ed.unit)}"></label>
+  <label class="f fix" style="width:90px"><span>수량 *</span><input class="num" name="qty" inputmode="numeric" value="${esc(ed.qty??1)}"></label>
+  <label class="f"><span>단가 (원) *</span><input class="num" name="price" inputmode="numeric" value="${won(ed.price??'')}"></label>
+  <span class="fix"><button class="btn primary">${ed.id?'수정 저장':'항목 추가'}</button>${ed.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div><div class="err"></div></form></div>
+  <div class="card"><h3>견적 메모 <span class="mute">${m.memos.length}건</span></h3>
+  ${m.memos.map(x=>`<div class="note"><span class="badge">요청 ${ORG[x.org]}${x.rname?' · '+esc(x.rname):''}</span><p>${esc(x.body)}</p>
+  <div class="row"><span class="meta">${meta(x)}</span><span class="fix"><button class="btn sm" data-act="edit" data-kind="memo" data-id="${x.id}">수정</button></span></div></div>`).join('')||'<div class="empty">등록된 메모가 없습니다.</div>'}
+  <form data-form="memo" novalidate style="margin-top:16px"><div class="row"><label class="f fix" style="width:160px"><span>요청자 구분 *</span><select name="org">${orgOpts(em.org||'customer')}</select></label>
+  <label class="f fix" style="width:160px"><span>요청자명</span><input name="rname" value="${esc(em.rname)}"></label><label class="f"><span>메모 내용 *</span><input name="body" value="${esc(em.body)}"></label>
+  <span class="fix"><button class="btn">${em.id?'수정 저장':'메모 등록'}</button>${em.id?' <button type="button" class="btn" data-act="cancel">취소</button>':''}</span></div>
+  <p class="soft" style="margin:8px 0 0;font-size:12px">작성자와 작성일시는 로그인한 계정으로 자동 기록됩니다. 요청자와 작성자는 다를 수 있습니다.</p><div class="err"></div></form></div>`},
+
+check(m){const mg=can.manageChecks(),dn=m.checks.filter(x=>x.done).length;
+  return `<div class="card"><div class="head"><h3>체크리스트</h3>${m.checks.length?`<div class="prog" style="width:200px"><div class="bar" style="flex:1"><i style="width:${dn/m.checks.length*100}%"></i></div><span class="mono mute">${dn}/${m.checks.length}</span></div>`:''}</div>
+  ${m.checks.map(x=>`<div class="chk${x.done?' on':''}"><input type="checkbox" data-act="toggle" data-id="${x.id}"${x.done?' checked':''}><span class="t">${esc(x.title)}</span>
+  ${x.done?`<span class="done" style="font-size:12px">${esc(x.doneBy)} · ${stampStr(x.doneAt)}</span>`:''}${mg?delBtns('check',x.id):''}</div>`).join('')||'<div class="empty">등록된 항목이 없습니다. 공통 항목은 후속 회의에서 정합니다.</div>'}
+  ${mg?`<form data-form="check" novalidate style="margin-top:16px"><div class="row"><input name="title" placeholder="체크 항목 입력"><span class="fix"><button class="btn primary">항목 추가</button></span></div><div class="err"></div></form>`
+      :'<p class="soft" style="margin:16px 0 0;font-size:12px">항목 추가·삭제는 IR큐더스 담당자만 할 수 있습니다. 완료 체크는 가능합니다.</p>'}</div>`},
+
+req(m){const list=m.reqs.filter(can.seeReq),ed=editing('req',m.reqs)||{},irk=user.org==='irk';
+  return `<div class="card"><h3>고객사 요구사항 <span class="mute">${list.length}건</span></h3>
+  ${list.map(x=>`<div class="note"><span class="badge">요청 ${ORG[x.org]}${x.rname?' · '+esc(x.rname):''}</span> <span class="badge${x.vis==='shared'?' blue':''}">${x.vis==='shared'?'공동 공개':'내부'}</span><p>${esc(x.body)}</p>
+  <div class="row"><span class="meta">${meta(x)}</span>${can.editReq(x)?`<span class="fix"><button class="btn sm" data-act="edit" data-kind="req" data-id="${x.id}">수정</button>${irk?delBtns('req',x.id):''}</span>`:''}</div></div>`).join('')||'<div class="empty">등록된 요구사항이 없습니다.</div>'}</div>
+  <form class="card" data-form="req" novalidate><h3>${ed.id?'요구사항 수정':'요구사항 등록'}</h3><div class="row">
+  <label class="f fix" style="width:160px"><span>요청자 구분 *</span><select name="org">${orgOpts(ed.org||'customer')}</select></label>
+  <label class="f fix" style="width:160px"><span>요청자명</span><input name="rname" value="${esc(ed.rname)}"></label>
+  <label class="f fix" style="width:240px"><span>공유범위</span><select name="vis"${dis(irk)}>${opt(irk?[['internal','내부 (IR큐더스만)'],['shared','공동 (스트리밍코리아 포함)']]:[['shared','공동 (스트리밍코리아 포함)']],ed.vis||(irk?'internal':'shared'))}</select></label></div>
+  <label class="f" style="margin-top:12px"><span>요구사항 내용 *</span><textarea name="body">${esc(ed.body)}</textarea></label>
+  <div class="err"></div><div class="actions">${ed.id?'<button type="button" class="btn" data-act="cancel">취소</button>':''}<button class="btn primary">${ed.id?'수정 저장':'등록'}</button></div></form>`},
+
+contract(m){const c=m.contract,e=can.editContract(),fin=c.versions.find(v=>v.id===c.finalId),last=c.versions[c.versions.length-1];
+  return `<form class="card" data-form="contract" novalidate><h3>계약 정보</h3><div class="row">
+  <label class="f" style="flex:2"><span>계약명</span><input name="title" value="${esc(c.title)}"${dis(e)}></label>
+  <label class="f"><span>계약금액 (원)</span><input class="num" name="amount" inputmode="numeric" placeholder="미입력" value="${won(c.amount)}"${dis(e)}></label>
+  <label class="f fix" style="width:140px"><span>부가세 기준</span><select name="vat"${dis(e)}>${opt(['미정','포함','별도'],c.vat)}</select></label>
+  ${e?'<span class="fix"><button class="btn primary">저장</button></span>':''}</div>
+  <p class="soft" style="margin:8px 0 0;font-size:12px">계약금액은 스트리밍 견적 합계와 따로 저장되며 서로 덮어쓰지 않습니다.${e?'':' 계약 수정은 계약담당자만 할 수 있습니다.'}</p><div class="err"></div></form>
+  <div class="card"><div class="head"><h3>계약서 파일 <span class="mute">${c.versions.length}개 버전</span></h3>
+  <div>현재 최종본 ${fin?`<span class="badge blue">v${fin.no} · ${esc(fin.file)}</span>`:'<span class="soft">미지정</span>'}${fin&&e?` <button class="btn sm" data-act="final" data-id="">지정 해제</button>`:''}</div></div>
+  ${c.versions.length?`<table><thead><tr><th>버전</th><th>파일</th><th>변경 내용</th><th>고객사 요청 → 반영</th><th>업로드</th><th></th></tr></thead><tbody>
+  ${[...c.versions].reverse().map(v=>`<tr><td class="mono" style="white-space:nowrap">v${v.no} ${v.id===c.finalId?'<span class="badge blue">최종본</span>':v===last?'<span class="badge">최신</span>':''}</td>
+  <td><a href="#" data-act="download">${esc(v.file)}</a><div class="soft mono" style="font-size:12px">${v.size>=1048576?(v.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(v.size/1024))+' KB'}</div></td>
+  <td class="wrap">${esc(v.note)||'<span class="soft">—</span>'}</td><td class="wrap">${v.creq||v.applied?`${esc(v.creq)||'—'}<div class="mute">→ ${esc(v.applied)||'—'}</div>`:'<span class="soft">—</span>'}</td>
+  <td class="mute" style="font-size:12px;white-space:nowrap">${esc(v.createdBy)}<br>${stampStr(v.createdAt)}</td>
+  <td class="right">${e&&v.id!==c.finalId?`<button class="btn sm" data-act="final" data-id="${v.id}">최종본으로 지정</button>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">업로드된 계약서가 없습니다.</div>'}
+  ${e?`<form data-form="version" novalidate style="margin-top:16px;border-top:1px solid var(--hairline);padding-top:16px"><h3 style="margin-bottom:12px">새 버전 추가</h3>
+  <div class="grid2"><label class="f"><span>계약서 파일 * (PDF·DOCX, 50MB 이하)</span><input type="file" name="file" accept=".pdf,.docx"></label>
+  <label class="f"><span>변경 내용</span><input name="note" placeholder="이 버전에서 수정한 조항"></label>
+  <label class="f"><span>고객사 요청 내용</span><input name="creq"></label><label class="f"><span>실제 반영 사항</span><input name="applied"></label></div>
+  <p class="soft" style="margin:8px 0 0;font-size:12px">새 파일을 올려도 최종본은 바뀌지 않습니다. 기존 버전은 삭제하거나 교체할 수 없습니다.</p>
+  <div class="err"></div><div class="actions"><button class="btn primary">버전 추가</button></div></form>`:''}</div>
+  <div class="card"><h3>최종본 지정 이력</h3>${c.finalLog.length?[...c.finalLog].reverse().map(l=>`<div class="chk"><span class="t">${l.no?`v${l.no} 을 최종본으로 지정`:'최종본 지정 해제'}</span><span class="soft" style="font-size:12px">${esc(l.by)} · ${stampStr(l.at)}</span></div>`).join(''):'<div class="empty">지정 이력이 없습니다.</div>'}</div>`}
+};
+
+/* ---------- 입력 처리 ---------- */
+const intOr=(v,min)=>{v=String(v).replace(/[,\s]/g,'');if(v==='')return '';return /^\d+$/.test(v)&&+v>=min?+v:null};
+const SUBMIT={
+  basic(f,m){const n=intOr(f.shareholders,0);if(n===null)return '예상 주주수는 0 이상의 정수로 입력해 주세요.';
+    Object.assign(m,{date:f.date,time:f.time,address:f.address.trim(),addressDetail:f.addressDetail.trim(),notes:f.notes,shareholders:n})},
+  schedule(f,m){m.date=f.date;m.time=f.time;Object.assign(m.sched,{pre_d:f.pre_d,mock_d:f.mock_d,mock_t:f.mock_t,reh_d:f.reh_d,reh_t:f.reh_t})},
+  contact(f,m){if(!f.name.trim())return '담당자명을 입력해 주세요.';if(!f.phone.trim()&&!f.email.trim())return '연락처와 이메일 중 하나는 입력해 주세요.';
+    if(f.email.trim()&&!/^\S+@\S+\.\S+$/.test(f.email.trim()))return '이메일 형식을 확인해 주세요.';
+    upsert('contact',m.contacts,{name:f.name.trim(),phone:f.phone.trim(),email:f.email.trim(),role:f.role.trim()})},
+  agenda(f,m){if(!f.type)return '의안 종류를 선택해 주세요.';if(!f.res)return '결의방법을 선택해 주세요.';if(!f.ko.trim())return '의안명(국문)을 입력해 주세요.';
+    upsert('agenda',m.agendas,{no:f.no.trim(),type:f.type,res:f.res,ko:f.ko.trim(),en:f.en.trim()})},
+  item(f,m){if(!f.name.trim())return '장비·서비스명을 입력해 주세요.';const q=intOr(f.qty,1),p=intOr(f.price,0);
+    if(q===null||q==='')return '수량은 1 이상의 정수로 입력해 주세요.';if(p===null||p==='')return '단가는 0 이상의 정수(원)로 입력해 주세요.';
+    upsert('item',m.items,{kind:f.kind,name:f.name.trim(),unit:f.unit.trim(),qty:q,price:p})},
+  memo(f,m){if(!f.body.trim())return '메모 내용을 입력해 주세요.';upsert('memo',m.memos,{org:f.org,rname:f.rname.trim(),body:f.body.trim()})},
+  check(f,m){if(!f.title.trim())return '체크 항목을 입력해 주세요.';m.checks.push(stamp({id:nid(),title:f.title.trim(),done:false},true))},
+  req(f,m){if(!f.body.trim())return '요구사항 내용을 입력해 주세요.';
+    upsert('req',m.reqs,{org:f.org,rname:f.rname.trim(),body:f.body.trim(),vis:user.org==='irk'?f.vis:'shared'})},
+  contract(f,m){const a=intOr(f.amount,0);if(a===null)return '계약금액은 0 이상의 정수(원)로 입력해 주세요.';Object.assign(m.contract,{title:f.title.trim(),amount:a,vat:f.vat})},
+  version(f,m,form){const file=form.querySelector('[name=file]').files[0];if(!file)return '계약서 파일을 선택해 주세요.';
+    if(!/\.(pdf|docx)$/i.test(file.name))return 'PDF 또는 DOCX 파일만 올릴 수 있습니다.';if(file.size>50*1024*1024)return '파일은 50MB 이하만 올릴 수 있습니다.';
+    const c=m.contract;c.versions.push(stamp({id:nid(),no:c.versions.length+1,file:file.name,size:file.size,note:f.note.trim(),creq:f.creq.trim(),applied:f.applied.trim()},true));return ['버전을 추가했습니다. 최종본은 그대로입니다']}
+};
+function upsert(kind,list,data){const cur=editing(kind,list);if(cur)stamp(Object.assign(cur,data),false);else list.push(stamp({id:nid(),...data},true))}
+const LISTS={contact:'contacts',agenda:'agendas',item:'items',memo:'memos',check:'checks',req:'reqs'};
+
+document.addEventListener('submit',e=>{const form=e.target.closest('[data-form]');if(!form)return;e.preventDefault();
+  const name=form.dataset.form;if(name==='login')return;
+  const f=Object.fromEntries(new FormData(form)),m=mt(route().cid),res=SUBMIT[name](f,m,form);
+  if(typeof res==='string'){form.querySelector('.err').textContent=res;return}
+  commit(Array.isArray(res)?res[0]:null)});
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,r=route(),m=r.cid?mt(r.cid):null;
+  if(a==='login'){user=USERS.find(u=>u.id===el.dataset.id);try{sessionStorage.setItem(KEY+'-user',user.id)}catch(x){}ui.q='';location.hash='#/';render()}
+  else if(a==='logout'){user=null;try{sessionStorage.removeItem(KEY+'-user')}catch(x){}location.hash='#/';render()}
+  else if(a==='open'){location.hash='#/c/'+el.dataset.id+'/basic'}
+  else if(a==='edit'){ui.edit={kind:el.dataset.kind,id:+el.dataset.id};ui.confirm=null;render();document.querySelector(`[data-form="${el.dataset.kind}"]`)?.scrollIntoView({block:'center'})}
+  else if(a==='cancel'){ui.edit=null;ui.confirm=null;render()}
+  else if(a==='ask'){ui.confirm=el.dataset.key;render()}
+  else if(a==='del'){const k=LISTS[el.dataset.kind];m[k]=m[k].filter(x=>x.id!==+el.dataset.id);commit('삭제했습니다')}
+  else if(a==='toggle'){const x=m.checks.find(x=>x.id===+el.dataset.id);x.done=!x.done;if(x.done){x.doneBy=user.name;x.doneAt=new Date().toISOString()}else{x.doneBy=x.doneAt=null}commit(x.done?'완료 처리했습니다':'완료를 해제했습니다')}
+  else if(a==='final'){e.preventDefault();const c=m.contract,id=el.dataset.id?+el.dataset.id:null,v=c.versions.find(v=>v.id===id);c.finalId=id;c.finalLog.push({no:v?v.no:null,by:user.name,at:new Date().toISOString()});commit(v?`v${v.no} 을 최종본으로 지정했습니다`:'최종본 지정을 해제했습니다')}
+  else if(a==='download'){e.preventDefault();toast('시연용에서는 파일을 내려받을 수 없습니다')}
+  else if(a==='reset'){if(ui.confirm==='reset'){db={m:{},seq:1};commit('입력 내용을 초기화했습니다')}else{ui.confirm='reset';el.textContent='한 번 더 누르면 초기화';el.classList.add('danger')}}
+});
+document.addEventListener('input',e=>{if(e.target.id!=='q')return;ui.q=e.target.value;document.getElementById('list').innerHTML=listBody();document.getElementById('cnt').textContent=listRows().length});
+
+render();
+</script>
+</body>
+</html>
