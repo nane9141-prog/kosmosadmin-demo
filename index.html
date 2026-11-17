@@ -305,6 +305,7 @@ input[type=radio]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* 터치 영역 44px, 입력 글자 16px(iOS 확대 방지). 데스크톱의 36px 규칙은 모바일에 적용하지 않는다 */
   .btn{height:44px;padding:0 16px}
   .btn.sm{height:36px;padding:0 12px;font-size:13px}
+  .btn.acct{height:auto;min-height:64px;padding:14px 16px}
   input,select,.ctl{height:44px;font-size:16px}
   textarea{font-size:16px}
   .ctl .ctl-in{height:42px;font-size:16px}
@@ -416,7 +417,7 @@ const USERS=[
   {id:'u4',name:'정영업',org:'irk',role:'sales',loginId:'irk-sales',label:'IR큐더스 · 영업',desc:'영업 시트 가져오기, 담당자·요구사항 관리'},
   {id:'u1',name:'김운영',org:'irk',role:'ops',loginId:'irk-ops',label:'IR큐더스 · 운영',desc:'전체 기업 조회·수정, 계약은 조회만'},
   {id:'u2',name:'박계약',org:'irk',role:'contract',loginId:'irk-contract',label:'IR큐더스 · 계약담당',desc:'전체 기업 조회·수정, 계약 수정'},
-  {id:'u3',name:'이송출',org:'streaming',loginId:'sk-01',label:'스트리밍코리아',desc:'배정 기업 6곳만. 기본정보(결과 조회)·의안·스트리밍·요구사항',assigned:[1,2,3,4,5,6]}
+  {id:'u3',name:'이송출',org:'streaming',loginId:'sk-01',label:'스트리밍코리아',desc:'배정 기업만 조회, 스트리밍 견적 작성',assigned:[1,2,3,4,5,6]}
 ];
 const ROLE={admin:'관리자',sales:'영업',ops:'운영',contract:'계약',dev:'개발'};
 const TABS=[['basic','기본정보'],['schedule','일정'],['agenda','의안'],['estimate','스트리밍'],['check','체크리스트'],['req','고객사 요구사항'],['contract','계약']];
