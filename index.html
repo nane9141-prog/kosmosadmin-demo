@@ -116,6 +116,7 @@ input.num{font-family:var(--mono);letter-spacing:0;text-align:right}
 .uf:has(input:disabled) i{color:var(--ink-soft)}
 label.f{display:block}
 label.f>span{display:block;font-size:12px;color:var(--ink-mute);margin-bottom:4px}
+.req{font-style:normal;color:var(--critical)}
 .err{color:var(--critical);font-size:12px;margin-top:8px}
 .err:empty{display:none}
 
@@ -219,7 +220,6 @@ tr.off td .badge{color:var(--ink-soft)}
 .wd:not(:empty){margin-left:6px}
 .sp{flex:1;align-self:stretch;cursor:text}
 .ctl-w.has .ctl-in{flex:none;padding-right:0}
-.ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 table.sched td.wrap{vertical-align:top;padding-top:10px;padding-bottom:10px;white-space:normal}
 table.sched td:first-child{padding-top:18px}
 table.sched .none{display:inline-block;line-height:36px}
@@ -311,7 +311,6 @@ input[type=radio]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .ctl .ctl-in{height:42px;font-size:16px}
   .ctl-ic{width:36px;height:36px}
   input[type=checkbox]{width:22px;height:22px}
-  .ck{min-height:44px}
   .sw{padding:10px 0}
   .opt{min-height:44px}
   /* 상단바: 1행 서비스명·계정, 2행 메뉴 */
@@ -361,35 +360,38 @@ input[type=radio]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* 표 → 카드: 머리글을 숨기고 각 칸에 열 이름을 붙인다 */
   table,tbody{display:block;width:100%}
   thead{display:none}
-  tr{display:block;padding:12px 0;border-bottom:1px solid var(--hairline)}
+  tr{display:flex;flex-direction:column;padding:12px 0;border-bottom:1px solid var(--hairline)}
   tr:last-child{border-bottom:0}
-  td{display:flex;justify-content:space-between;align-items:baseline;gap:16px;width:auto!important;height:auto;min-height:0;padding:4px 0!important;border:0;text-align:right;white-space:normal!important;overflow-wrap:anywhere}
-  td::before{content:attr(data-label);flex:none;max-width:40%;color:var(--ink-mute);font-size:12px;text-align:left}
+  td{display:flow-root;width:auto!important;height:auto;min-height:0;padding:4px 0!important;border:0;text-align:right;white-space:normal!important;overflow-wrap:anywhere}
+  td::before{content:attr(data-label);float:left;max-width:40%;margin-right:16px;color:var(--ink-mute);font-size:12px;line-height:21px;text-align:left}
   td:not([data-label])::before{display:none}
-  td:not([data-label]){justify-content:flex-end}
-  td:first-child{justify-content:flex-start;text-align:left;font-weight:500;font-size:15px}
-  td:first-child::before{display:none}
-  td:has(input,select,textarea,.ctl,.ck){display:block;text-align:left}
-  td:has(input,select,textarea,.ctl,.ck)::before{display:block;max-width:none;margin-bottom:4px}
-  td:has(.ck)::before,td:has(input[type=checkbox])::before{display:none}
-  td:has(.sw){display:flex;justify-content:space-between;align-items:center}
-  td:has(.sw)::before{display:block}
-  td:has(>input[type=checkbox]){display:flex;justify-content:space-between;align-items:center}
-  td:has(>input[type=checkbox])::before{display:block}
+  /* 카드 제목: 기본은 첫 칸, 표에서 .ttl 로 지정하면 그 칸 */
+  td:first-child,td.ttl{order:-1;text-align:left;font-weight:500;font-size:15px}
+  td:first-child::before,td.ttl::before{display:none}
+  tr:has(td.ttl) td:first-child:not(.ttl){order:0;text-align:right;font-weight:400;font-size:14px}
+  tr:has(td.ttl) td:first-child:not(.ttl)::before{display:block}
+  /* 입력이 든 칸은 열 이름을 위에 둔다 */
+  td:has(input:not([type=checkbox]),select,textarea,.ctl,.place){text-align:left}
+  td:has(input:not([type=checkbox]),select,textarea,.ctl,.place)::before{float:none;display:block;max-width:none;margin:0 0 4px}
   td:empty{display:none}
-  td.empty{justify-content:center;font-weight:400;font-size:14px}
+  td.empty{text-align:center;font-weight:400;font-size:14px}
+  #list td.nil{display:none}
+  .prog{justify-content:flex-end}
+  .prog .bar{max-width:120px}
   tr.link:hover td{background:none}
   tr.link:active{background:var(--primary-soft)}
   td .btn.sm{margin-top:4px}
   table.sched td:first-child{padding-top:4px!important}
-  table.sched td:not(:first-child)::before{display:block!important;max-width:none;margin-bottom:4px}
-  table.sched td:has(.none){display:flex;align-items:center}
-  table.sched td:has(.none)::before{margin:0}
   table.sched .none{line-height:1.5}
   .place{flex-direction:column;align-items:stretch}
   .place-ro,.place-in{min-width:0;width:100%}
   .place-in{grid-template-columns:1fr}
   .ro{height:44px}
+  /* 메모·요구사항 카드의 버튼은 한 줄에 둔다 */
+  .note .row{flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px}
+  .note .row>*{width:auto!important;flex:1}
+  .note .row>.fix{flex:none}
+  .note .row>.fix .btn{width:auto;margin-top:0}
   .entry th{background:none}
   /* 선택 창과 모달: 아래에서 올라오는 시트 */
   .pop{left:0!important;right:0;top:auto!important;bottom:0;min-width:0!important;max-height:80vh;overflow:auto;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));box-shadow:0 0 0 100vmax rgba(21,25,30,.4)}
@@ -504,6 +506,7 @@ function labelTables(root=document){root.querySelectorAll('table').forEach(t=>{c
   t.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>{if(hs[i]&&td.colSpan===1)td.dataset.label=hs[i]}))})}
 function enhance(){
   closePop();labelTables();
+  document.querySelectorAll('label.f>span:first-child').forEach(sp=>{if(sp.firstElementChild||!/ \*$/.test(sp.textContent))return;sp.innerHTML=esc(sp.textContent.slice(0,-2))+' <em class="req" title="필수">*</em>'});
   document.querySelectorAll('select:not(.x-hide)').forEach(sel=>{
     const b=mkCtl(sel,ICON.chev),v=b.firstChild;
     const sync=()=>{const o=sel.selectedOptions[0];v.textContent=o?o.textContent:'';v.classList.toggle('ph',!sel.value)};sync();
@@ -636,11 +639,11 @@ function listBody(){
   if(!rows.length)return `<div class="empty">검색결과가 없습니다.</div>`;
   return `<table><thead><tr><th>기업명</th><th>주총일시</th><th>메인 담당자</th>${sc?'<th class="right">계약금액</th><th>계약서</th>':''}${irk?'<th>체크리스트</th><th>세미나</th>':''}</tr></thead><tbody>
   ${rows.map(c=>{const m=db.m[c[0]],ch=m?m.checks:[],dn=ch.filter(x=>x.done).length,ct=m&&m.contract,mc=mainOf(m),sm=db.seminar[c[0]];
+    const cell=(v,cls='')=>`<td class="${cls}${v?'':' nil'}">${v||'<span class="soft">-</span>'}</td>`;
     return `<tr class="link" tabindex="0" data-act="open" data-id="${c[0]}"><td>${esc(c[2])} <span class="mono soft" style="font-size:12px;margin-left:4px">${c[1]}</span></td><td>${m?dt(m.date,m.time):tbd}</td>
-    <td>${mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'<span class="soft">-</span>'}</td>
-    ${sc?`<td class="right mono">${ct&&ct.amount!==''?won(ct.amount):'<span class="soft">-</span>'}</td><td>${ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':'<span class="soft">-</span>'}</td>`:''}
-    ${irk?`<td>${ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'<span class="soft">-</span>'}</td>`:''}
-    ${irk?`<td>${semBadge(sm)||'<span class="soft">-</span>'}</td>`:''}</tr>`}).join('')}
+    ${cell(mc?esc(mc.name)+(mc.dept?` <span class="soft" style="font-size:12px">${esc(mc.dept)}</span>`:''):'')}
+    ${sc?cell(ct&&ct.amount!==''?won(ct.amount):'','right mono')+cell(ct&&ct.finalId?'<span class="badge blue">최종본 지정</span>':ct&&ct.versions.length?'<span class="badge">'+ct.versions.length+'개 버전</span>':''):''}
+    ${irk?cell(ch.length?`<div class="prog"><div class="bar" style="flex:1"><i style="width:${dn/ch.length*100}%"></i></div><span class="mono mute">${dn}/${ch.length}</span></div>`:'')+cell(semBadge(sm)):''}</tr>`}).join('')}
   </tbody></table>`}
 function viewList(){const n=listRows().length;
   return `<div class="page"><div class="head"><div><h1>기업 목록</h1><p class="mute" style="margin:4px 0 0">${user.org==='irk'?'초기 관리대상 '+COMPANIES.length+'개사':'배정된 기업'} · <span id="cnt">${n}</span>곳 표시</p></div>
@@ -712,7 +715,7 @@ schedule(m,cid){const e=can.editBasic(),s=m.sched,same=s.mock_same!==false,maddr
 agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
   return `<div class="card"><h3>의안 <span class="mute">${m.agendas.length}건</span></h3>
   ${m.agendas.length?`<table><thead><tr><th>번호</th><th>의안 종류</th><th>결의방법</th><th>의안명</th>${e?'<th></th>':''}</tr></thead><tbody>
-  ${m.agendas.map(a=>`<tr><td class="mono">${esc(a.no)}</td><td>${esc(a.type)}</td><td><span class="badge">${esc(a.res)}</span></td><td class="wrap">${esc(a.ko)}${a.en?`<div class="soft" style="font-size:12px">${esc(a.en)}</div>`:''}</td>
+  ${m.agendas.map(a=>`<tr><td class="mono">${esc(a.no)}</td><td>${esc(a.type)}</td><td><span class="badge">${esc(a.res)}</span></td><td class="wrap ttl">${esc(a.ko)}${a.en?`<div class="soft" style="font-size:12px;font-weight:400">${esc(a.en)}</div>`:''}</td>
   ${e?`<td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="agenda" data-id="${a.id}">수정</button>${delBtns('agenda',a.id)}</td>`:''}</tr>`).join('')}</tbody></table>`:'<div class="empty">등록된 의안이 없습니다.</div>'}</div>
   ${e?`<form class="card entry${ed.id?' editing':''}" data-form="agenda" novalidate><h3>${ed.id?'의안 수정':'의안 추가'}</h3><div class="row">
   <label class="f fix" style="width:96px"><span>의안번호</span><input name="no" placeholder="1, 2-1" value="${esc(ed.no)}"></label>
@@ -725,7 +728,7 @@ agenda(m){const e=can.editBasic(),ed=editing('agenda',m.agendas)||{};
 estimate(m){const ed=editing('item',m.items)||{},total=m.items.reduce((s,x)=>s+x.qty*x.price,0),em=editing('memo',m.memos)||{};
   return `<div class="card"><h3>견적 항목 <span class="mute">${m.items.length}건</span></h3>
   ${m.items.length?`<table><thead><tr><th>구분</th><th>장비·서비스명</th><th>단위</th><th class="right">수량</th><th class="right">단가</th><th class="right">금액</th><th></th></tr></thead><tbody>
-  ${m.items.map(x=>`<tr><td><span class="badge">${esc(x.kind)}</span></td><td>${esc(x.name)}</td><td class="mute">${esc(x.unit)}</td><td class="right mono">${won(x.qty)}</td><td class="right mono">${won(x.price)}</td><td class="right mono">${won(x.qty*x.price)}</td>
+  ${m.items.map(x=>`<tr><td><span class="badge">${esc(x.kind)}</span></td><td class="ttl">${esc(x.name)}</td><td class="mute">${esc(x.unit)}</td><td class="right mono">${won(x.qty)}</td><td class="right mono">${won(x.price)}</td><td class="right mono">${won(x.qty*x.price)}</td>
   <td class="right" style="white-space:nowrap"><button class="btn sm" data-act="edit" data-kind="item" data-id="${x.id}">수정</button>${delBtns('item',x.id)}</td></tr>`).join('')}</tbody></table>
   <div class="total"><span class="mute">합계 (부가세 제외 공급가액) · 수량 × 단가의 합</span><b>${won(total)}원</b></div>`:'<div class="empty">등록된 견적 항목이 없습니다.</div>'}
   <form class="entry${ed.id?' editing':''}" data-form="item" novalidate><h3>${ed.id?'견적 항목 수정':'견적 항목 추가'}</h3><div class="row">
